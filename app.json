@@ -1,28 +1,29 @@
 {
   "expo": {
-    "name": "TomoroCoffe",
+    "name": "Tomoro Coffe",
     "slug": "TomoroCoffe",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/logoTomoro.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
-    "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
     "ios": {
       "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/splash-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.fauzanashshidiq.TomoroCoffe"
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "acbc2f36-f2d6-4ef2-8248-629a84b0bb56"
+      }
     }
   }
 }
