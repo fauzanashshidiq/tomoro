@@ -2,13 +2,15 @@ import React, { useState } from "react";
 import { View, Text, TouchableOpacity, Image, StyleSheet } from "react-native";
 import Modal from "react-native-modal";
 import { useNavigation } from "@react-navigation/native";
+import axios from "axios";
 
-export default function MenuModal({ isVisible, onClose, menuData }) {
+export default function MenuModal({ isVisible, onClose, menuData, userData }) {
   const [selectedSize, setSelectedSize] = useState("Reguler");
   const [isIcedActive, setIsIcedActive] = useState(false);
   const [count, setCount] = useState(1);
   const navigation = useNavigation();
   const { rating } = menuData;
+  const { harga, id } = menuData;
 
   // Mapping gambar berdasarkan nama
   const imageMapping = {
@@ -32,9 +34,36 @@ export default function MenuModal({ isVisible, onClose, menuData }) {
     setCount((prevCount) => (prevCount > 1 ? prevCount - 1 : 1));
   };
 
-  const handleAddToCart = () => {
-    onClose(); // Tutup modal
-    navigation.navigate("CheckoutScreen", { selectedMenu: menuData }); // Kirim data ke CheckoutScreen
+  // const handleAddToCart = () => {
+  //   onClose(); // Tutup modal
+  //   navigation.navigate("CheckoutScreen", { selectedMenu: menuData }); // Kirim data ke CheckoutScreen
+  // };
+
+  const handleAddToCart = async () => {
+    try {
+      // Data yang akan dikirim ke backend
+      const orderData = {
+        menu_id: id,          // ID menu dari menuData
+        user_id: 1,                    // Gantilah dengan user_id yang sesuai (misalnya dari sesi login)
+        quantity: count,                 // Jumlah pesanan
+        size: selectedSize,          // Ukuran (Reguler/Large)
+        iced: isIcedActive ? 1 : 0, // Minuman Iced atau tidak
+        total_harga:count * harga
+      };
+  
+      // Kirim POST request ke endpoint backend
+      const response = await axios.post("http://192.168.0.102:5000/pesanans", orderData);
+  
+      if (response.status === 201) {
+        console.log("Pesanan berhasil ditambahkan!");
+        onClose(); // Tutup modal
+        navigation.navigate("CheckoutScreen", { selectedMenu: menuData }); // Navigasi ke CheckoutScreen
+      } else {
+        console.error("Gagal menambahkan pesanan");
+      }
+    } catch (error) {
+      console.error("Terjadi kesalahan saat menambahkan pesanan:", error);
+    }
   };
 
   return (

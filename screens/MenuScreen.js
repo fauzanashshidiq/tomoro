@@ -13,7 +13,7 @@ import axios from "axios";
 
 import MenuModal from "./components/MenuModal";
 
-export default function MenusScreen() {
+export default function MenusScreen({userData}) {
   const [isModalVisible, setModalVisible] = useState(false);
   const [selectedMenu, setSelectedMenu] = useState(null);
   const [menuData, setMenuData] = useState([]); // State untuk menyimpan data menu
@@ -25,7 +25,7 @@ export default function MenusScreen() {
   useEffect(() => {
     // Ambil data dari API
     axios
-      .get("http://192.168.203.178:5000/menus")
+      .get("http://192.168.0.102:5000/menus")
       .then((response) => {
         setMenuData(response.data); // Simpan data ke state
         setLoading(false); // Set loading selesai
@@ -99,13 +99,13 @@ export default function MenusScreen() {
                     style={{
                       textAlign: "center",
                       color:
-                        selectedMenu?.name === menu.name
+                        selectedMenu?.nama === menu.nama
                           ? "#EE7B00"
                           : "#8E8E93",
                       fontWeight: "bold",
                     }}
                   >
-                    {menu.name}
+                    {menu.nama}
                   </Text>
                 </TouchableOpacity>
               ))}
@@ -182,7 +182,8 @@ export default function MenusScreen() {
       <MenuModal
         isVisible={isModalVisible}
         onClose={() => setModalVisible(false)}
-        menuData={selectedMenu || {}}
+        menuData={selectedMenu || {}} 
+        userData={userData}
       />
     </LinearGradient>
   );

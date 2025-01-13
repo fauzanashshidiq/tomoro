@@ -19,7 +19,7 @@ export default function LoginScreen({ onLogin }) {
   const handleLogin = () => {
     console.log("Sending login request...");
     axios
-      .post("http://192.168.203.178:5000/login", { email, password })
+      .post("http://192.168.0.102:5000/login", { email, password })
       .then((response) => {
         const user = response.data;
         setTempUser(user); // Simpan user data sementara

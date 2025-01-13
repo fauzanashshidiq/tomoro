@@ -15,7 +15,7 @@ app.use(bodyParser.json());
 const db = mysql.createConnection({
   host: "localhost", // Ganti dengan host Anda
   user: "root", // Ganti dengan username Anda
-  password: "admin123", // Ganti dengan password Anda
+  password: "_28Mei2004", // Ganti dengan password Anda
   database: "tomoro", // Ganti dengan nama database Anda
 });
 
@@ -142,7 +142,7 @@ app.post("/login", (req, res) => {
 
 app.get("/menus", (req, res) => {
   console.log("Endpoint /menus was hit!");
-  db.query("SELECT name, image, rating FROM menus", (err, results) => {
+  db.query("SELECT id, nama, image, rating, harga FROM menus", (err, results) => {
     if (err) {
       console.error("Database query error:", err);
       return res.status(500).send("Error fetching menus");
@@ -152,7 +152,25 @@ app.get("/menus", (req, res) => {
   });
 });
 
+app.post("/pesanans", (req, res) => {
+  const { menu_id, user_id, total_harga, size, iced, quantity } = req.body;
+
+  const query = `
+    INSERT INTO pesanans (menu_id, user_id, total_harga, size, iced, quantity)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `;
+
+  db.query(query, [menu_id, user_id, total_harga, size, iced, quantity], (err, results) => {
+    if (err) {
+      console.error("Database insert error:", err);
+      return res.status(500).send("Error inserting order");
+    }
+
+    res.status(201).send("Order successfully added");
+  });
+});
+
 // Jalankan server
 app.listen(port, () => {
-  console.log(`Server running at http://192.168.203.178:${port}`);
+  console.log(`Server running at http://192.168.0.102:${port}`);
 });
