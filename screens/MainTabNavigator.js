@@ -36,7 +36,9 @@ export default function MainTabNavigator({ userData, onLogout }) {
       <Tab.Screen name="Home">
         {() => <HomeScreen userData={userData} />}
       </Tab.Screen>
-      <Tab.Screen name="Menu" component={MenuStackNavigator} initialParams={{ userData: userData }}/>
+      <Tab.Screen name="Menu">
+        {() => <MenuStackNavigator userData={userData} />}
+      </Tab.Screen>
       <Tab.Screen
         name="Order"
         component={OrderStackNavigator}

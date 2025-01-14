@@ -8,10 +8,12 @@ import SelectPayment from "../SelectPayment";
 
 const Stack = createStackNavigator();
 
-export default function MenuStackNavigator({userData}) {
+export default function MenuStackNavigator({ userData }) {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="MenuScreen" component={MenuScreen} userData={userData} />
+      <Stack.Screen name="MenuScreen">
+        {() => <MenuScreen userData={userData} />}
+      </Stack.Screen>
       <Stack.Screen name="OutletScreen" component={OutletScreen} />
       <Stack.Screen name="CheckoutScreen" component={CheckoutScreen} />
       <Stack.Screen name="SelectPayment" component={SelectPayment} />

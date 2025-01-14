@@ -40,20 +40,27 @@ export default function MenuModal({ isVisible, onClose, menuData, userData }) {
   // };
 
   const handleAddToCart = async () => {
+    if (!userData || !userData.id) {
+      console.error("User data is not available");
+      return; // Prevent proceeding without valid userData
+    }
     try {
       // Data yang akan dikirim ke backend
       const orderData = {
-        menu_id: id,          // ID menu dari menuData
-        user_id: 1,                    // Gantilah dengan user_id yang sesuai (misalnya dari sesi login)
-        quantity: count,                 // Jumlah pesanan
-        size: selectedSize,          // Ukuran (Reguler/Large)
+        menu_id: id, // ID menu dari menuData
+        user_id: userData.id, // Gantilah dengan user_id yang sesuai (misalnya dari sesi login)
+        quantity: count, // Jumlah pesanan
+        size: selectedSize, // Ukuran (Reguler/Large)
         iced: isIcedActive ? 1 : 0, // Minuman Iced atau tidak
-        total_harga:count * harga
+        total_harga: count * harga,
       };
-  
+
       // Kirim POST request ke endpoint backend
-      const response = await axios.post("http://192.168.0.102:5000/pesanans", orderData);
-  
+      const response = await axios.post(
+        "http://192.168.203.178:5000/pesanans",
+        orderData
+      );
+
       if (response.status === 201) {
         console.log("Pesanan berhasil ditambahkan!");
         onClose(); // Tutup modal
