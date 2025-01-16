@@ -61,13 +61,13 @@ export default function MenusScreen({ userData }) {
         }}
       >
         <TouchableOpacity onPress={() => navigation.navigate("OutletScreen")}>
-          <Text style={{ fontWeight: "bold", fontSize: 20, marginTop: 20 }}>
+          <Text style={{ fontWeight: "bold", fontSize: 18, marginTop: 20 }}>
             {selectedOutlet ? selectedOutlet.name : "Outlet"}
           </Text>
         </TouchableOpacity>
         <Text
           style={{
-            fontSize: 15,
+            fontSize: 13,
             paddingTop: 15,
             alignSelf: "center",
             color: "#EE7B00",
@@ -84,7 +84,13 @@ export default function MenusScreen({ userData }) {
               Loading data menu...
             </Text>
           ) : (
-            <View style={{ flex: 1, marginTop: 30 }}>
+            <View
+              style={{
+                flex: 1,
+                marginTop: 30,
+                marginLeft: 10,
+              }}
+            >
               {menuData.map((menu, index) => (
                 <TouchableOpacity
                   key={menu.id || index} // Pastikan API memberikan ID unik
@@ -103,6 +109,7 @@ export default function MenusScreen({ userData }) {
                           ? "#EE7B00"
                           : "#8E8E93",
                       fontWeight: "bold",
+                      fontSize: 12,
                     }}
                   >
                     {menu.nama}

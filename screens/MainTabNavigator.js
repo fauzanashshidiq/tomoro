@@ -41,14 +41,15 @@ export default function MainTabNavigator({ userData, onLogout }) {
       </Tab.Screen>
       <Tab.Screen
         name="Order"
-        component={OrderStackNavigator}
         listeners={({ navigation }) => ({
           tabPress: (e) => {
             e.preventDefault(); // Cegah perilaku navigasi default
             navigation.navigate("Order", { screen: "OrderScreen" }); // Reset stack ke OrderScreen
           },
         })}
-      />
+      >
+        {() => <OrderStackNavigator userData={userData} />}
+      </Tab.Screen>
       <Tab.Screen name="Profile">
         {() => <ProfileScreen userData={userData} onLogout={onLogout} />}
       </Tab.Screen>

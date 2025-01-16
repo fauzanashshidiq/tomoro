@@ -9,8 +9,28 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 
-export default function PaymentSuccessScreen() {
+export default function PaymentSuccessScreen({ route }) {
   const navigation = useNavigation();
+  const { paymentMethod } = route.params; // Retrieve the passed payment method data
+  const { pesananData } = route.params;
+  const { user } = route.params;
+
+  // Formatkan timestamp menjadi tanggal yang diinginkan
+  const formatTimestamp = (timestamp) => {
+    const date = new Date(timestamp);
+
+    // Format tanggal
+    const options = {
+      year: "numeric", // Tahun, misalnya "2024"
+      month: "long", // Bulan, misalnya "Agustus"
+      day: "numeric", // Tanggal, misalnya "27"
+      hour: "numeric", // Jam, misalnya "10"
+      minute: "numeric", // Menit, misalnya "15"
+      timeZoneName: "short", // Zona waktu, misalnya "WIB"
+    };
+
+    return new Intl.DateTimeFormat("id-ID", options).format(date); // id-ID untuk bahasa Indonesia
+  };
 
   return (
     <View style={styles.container}>
@@ -23,21 +43,31 @@ export default function PaymentSuccessScreen() {
         <Text style={styles.successText}>Pembayaran Berhasil!</Text>
         <View style={styles.orderCardPaymentMethod}>
           <View style={styles.paymentMethodHeader}>
-            <Text style={styles.textTitlePaymentMethod}>QRIS</Text>
+            <Text style={styles.textTitlePaymentMethod}>
+              {paymentMethod.name}
+            </Text>
             <Image
               style={styles.imagePaymentMethod}
-              source={require("../assets/qris.png")}
+              source={paymentMethod.icon}
             />
           </View>
-          <Text style={styles.textPaymentMethod}>Rp 26.000</Text>
+          <Text style={styles.textPaymentMethod}>
+            {pesananData.length > 0
+              ? `Rp ${pesananData[0].total_harga.toLocaleString("id-ID")}`
+              : "Rp 0"}
+          </Text>
           <Text style={styles.textTitleDetail}>Nomor Pesanan</Text>
           <Text style={styles.textDetail}>2311400NA-007</Text>
           <Text style={styles.textTitleDetail}>Nomor Referensi</Text>
           <Text style={styles.textDetail}>AXILF91000</Text>
           <Text style={styles.textTitleDetail}>Tanggal Pembayaran</Text>
-          <Text style={styles.textDetail}>27 Agustus 2024, 10:15 WIB</Text>
+          <Text style={styles.textDetail}>
+            {pesananData && pesananData[0]
+              ? formatTimestamp(pesananData[0].timestamp)
+              : "Loading..."}
+          </Text>
           <Text style={styles.textTitleDetail}>Nama Pemesan</Text>
-          <Text style={styles.textDetail}>Karina</Text>
+          <Text style={styles.textDetail}>{user}</Text>
           <View style={styles.paymentMethodHeaderBottom}></View>
         </View>
       </ScrollView>

@@ -9,10 +9,14 @@ import {
   Alert,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import axios from "axios";
 
-export default function PaymentSuccessScreen() {
+export default function PaymentSelectScreen({ route }) {
   const [selectedMethod, setSelectedMethod] = useState(null);
   const navigation = useNavigation();
+  const { pesananData } = route.params;
+  const { user } = route.params;
+  const { currentOrderId } = route.params;
 
   const paymentMethods = [
     {
@@ -36,11 +40,39 @@ export default function PaymentSuccessScreen() {
 
   const handleSelectMethod = (id) => {
     if (selectedMethod === id) {
-      // Jika metode yang sama dipilih dua kali, batalkan pilihan
       setSelectedMethod(null);
     } else {
       setSelectedMethod(id);
     }
+  };
+
+  const handlePayment = () => {
+    // Mengecek jika metode pembayaran dipilih
+    if (!selectedMethod) {
+      Alert.alert("Payment Failed", "Please select a payment method");
+      return; // Menghentikan eksekusi lebih lanjut jika tidak ada metode pembayaran yang dipilih
+    }
+
+    // Kirim data ke backend
+    axios
+      .post(`http://192.168.203.178:5000/pesanans/${currentOrderId}`, {
+        status_pesanan: "Sudah Bayar", // Kirim status "Sudah Bayar" langsung
+        id: currentOrderId,
+      })
+      .then(() => {
+        // Tunggu state berubah, baru navigasi
+        navigation.navigate("PaymentSuccessScreen", {
+          paymentMethod: paymentMethods.find(
+            (method) => method.id === selectedMethod
+          ),
+          pesananData: pesananData,
+          user: user,
+        });
+      })
+      .catch((error) => {
+        console.error("Error updating payment status: ", error);
+        Alert.alert("Error", "Error processing payment");
+      });
   };
 
   return (
@@ -50,7 +82,11 @@ export default function PaymentSuccessScreen() {
       </View>
       <ScrollView style={styles.contentContainer}>
         <View style={styles.orderCard}>
-          <Text style={styles.price}>Rp 26.000</Text>
+          <Text style={styles.price}>
+            {pesananData.length > 0
+              ? `Rp ${pesananData[0].total_harga.toLocaleString("id-ID")}`
+              : "Rp 0"}
+          </Text>
         </View>
         <View style={styles.orderCardPaymentMethod}>
           <Text style={styles.textTitlePaymentMethod}>Payment Method</Text>
@@ -74,13 +110,7 @@ export default function PaymentSuccessScreen() {
       <View style={styles.orderCardPayment}>
         <TouchableOpacity
           style={styles.buttonSelectPayment}
-          onPress={() => {
-            if (selectedMethod) {
-              navigation.navigate("PaymentSuccessScreen");
-            } else {
-              Alert.alert("Payment Failed", "Please select a payment method");
-            }
-          }}
+          onPress={handlePayment}
         >
           <Text style={styles.textSelectPayment}>Pay</Text>
         </TouchableOpacity>

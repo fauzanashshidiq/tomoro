@@ -174,9 +174,72 @@ app.post("/pesanans", (req, res) => {
         return res.status(500).send("Error inserting order");
       }
 
-      res.status(201).send("Order successfully added");
+      res.status(201).json({
+        id: results.insertId, // ID pesanan yang baru ditambahkan
+        message: "Order successfully added",
+      });
     }
   );
+});
+
+app.post("/pesanans/:id", (req, res) => {
+  const { status_pesanan, id } = req.body;
+
+  const query = `
+    UPDATE pesanans SET status_pesanan = ? WHERE id = ?
+  `;
+
+  db.query(query, [status_pesanan, id], (err, results) => {
+    if (err) {
+      console.error("Database insert error:", err);
+      return res.status(500).send("Error inserting order");
+    }
+
+    res.status(201).json({
+      // ID pesanan yang baru ditambahkan
+      message: "Status successfully changed to 'Sudah Bayar'",
+    });
+  });
+});
+
+app.get("/pesanans/:id", (req, res) => {
+  console.log("Endpoint /pesanans/:id was hit");
+  const { id } = req.params;
+
+  const query = "SELECT * FROM pesanans WHERE id = ?";
+  db.query(query, [id], (err, results) => {
+    if (err) {
+      console.error("Database query error:", err);
+      return res.status(500).send("Error fetching order");
+    }
+
+    if (results.length === 0) {
+      return res.status(404).send("Order not found");
+    }
+
+    res.status(200).json(results[0]); // Kirimkan pesanan pertama yang ditemukan
+  });
+});
+
+// Endpoint untuk mendapatkan pesanan berdasarkan user_id dan status_pesanan
+app.get("/pesanans2", async (req, res) => {
+  const { user_id, status_pesanan } = req.query;
+
+  const query = `
+    SELECT p.*, m.nama, m.image
+  FROM pesanans p 
+  JOIN menus m ON p.menu_id = m.id
+  WHERE p.user_id = ? AND p.status_pesanan = ?
+  `;
+
+  db.query(query, [user_id, status_pesanan], (err, results) => {
+    if (err) {
+      return res
+        .status(500)
+        .json({ message: "Error fetching data", error: err });
+    }
+    res.json(results);
+  });
 });
 
 // Jalankan server

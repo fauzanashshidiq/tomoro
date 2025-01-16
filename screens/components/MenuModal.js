@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, Image, StyleSheet } from "react-native";
 import Modal from "react-native-modal";
 import { useNavigation } from "@react-navigation/native";
@@ -62,9 +62,16 @@ export default function MenuModal({ isVisible, onClose, menuData, userData }) {
       );
 
       if (response.status === 201) {
+        const currentOrderId = response.data.id; // Ambil ID dari respons
         console.log("Pesanan berhasil ditambahkan!");
+        console.log("data id pesanan: " + currentOrderId);
+
         onClose(); // Tutup modal
-        navigation.navigate("CheckoutScreen", { selectedMenu: menuData }); // Navigasi ke CheckoutScreen
+        navigation.navigate("CheckoutScreen", {
+          selectedMenu: menuData,
+          currentOrderId: currentOrderId,
+          user: userData.name,
+        }); // Navigasi ke CheckoutScreen
       } else {
         console.error("Gagal menambahkan pesanan");
       }
@@ -72,6 +79,13 @@ export default function MenuModal({ isVisible, onClose, menuData, userData }) {
       console.error("Terjadi kesalahan saat menambahkan pesanan:", error);
     }
   };
+
+  useEffect(() => {
+    if (isVisible) {
+      setCount(1);
+      setSelectedSize("Reguler");
+    }
+  }, [isVisible]);
 
   return (
     <Modal

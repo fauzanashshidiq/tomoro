@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -11,9 +11,37 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation } from "@react-navigation/native";
+import axios from "axios";
 
 export default function CheckoutScreen({ route }) {
   const navigation = useNavigation();
+  const { selectedMenu } = route.params;
+  const { currentOrderId } = route.params;
+  const { user } = route.params;
+  const [pesananData, setPesananData] = useState([]);
+
+  // Mapping gambar berdasarkan nama
+  const imageMapping = {
+    "StrawberryAmericano.jpg": require("../assets/StrawberryAmericano.jpg"),
+    "CloudSeriesExlusiveCombo.png": require("../assets/CloudSeriesExlusiveCombo.png"),
+    // Tambahkan gambar lainnya sesuai dengan nama file di assets
+  };
+
+  // Menentukan gambar berdasarkan nama dari menuData
+  const menuImage = imageMapping[selectedMenu?.image] || null; // Jika gambar tidak ditemukan, null
+
+  useEffect(() => {
+    if (currentOrderId) {
+      axios
+        .get(`http://192.168.203.178:5000/pesanans/${currentOrderId}`)
+        .then((response) => {
+          setPesananData([response.data]); // Simpan data pesanan
+        })
+        .catch((error) => {
+          console.error("Error fetching order:", error);
+        });
+    }
+  }, [currentOrderId]);
 
   return (
     <LinearGradient
@@ -33,28 +61,58 @@ export default function CheckoutScreen({ route }) {
             </View>
           </View>
           <View style={styles.orderDetails}>
-            <Image
-              source={require("../assets/CloudSeriesExlusiveCombo.png")}
-              style={styles.productImage}
-            />
+            <Image source={menuImage} style={styles.productImage} />
             <View style={styles.productContent}>
-              <Text style={styles.productName}>Strawberry Americano</Text>
-              <Text style={styles.productSize}>Reguler, Iced</Text>
-              <Text style={styles.productPrice}>Rp 26.000</Text>
+              <Text
+                style={styles.productName}
+                numberOfLines={2} // Membatasi hanya 1 baris
+                ellipsizeMode="tail" // Menambahkan "..." di akhir teks jika terlalu panjang
+              >
+                {selectedMenu.nama}
+              </Text>
+              <Text style={styles.productSize}>
+                {""}
+                {pesananData.length > 0
+                  ? `${pesananData[0].size}, ${
+                      pesananData[0].quantity === 1 ? "Iced" : "Non-Iced"
+                    }`
+                  : " "}
+              </Text>
+              <Text style={styles.productPrice}>
+                Rp {selectedMenu.harga.toLocaleString("id-ID")}
+              </Text>
             </View>
-            <Text style={styles.productQuantity}>1x</Text>
+            <Text style={styles.productQuantity}>
+              {""}
+              {pesananData.length > 0 ? `${pesananData[0].quantity}x` : "0"}
+            </Text>
           </View>
         </View>
         <View style={styles.orderCardPrice}>
           <Text style={styles.textTotal}>Total</Text>
-          <Text style={styles.textTotalPrice}>Rp 26.000</Text>
+          <Text style={styles.textTotalPrice}>
+            {pesananData.length > 0
+              ? `Rp ${pesananData[0].total_harga.toLocaleString("id-ID")}`
+              : "Rp 0"}
+          </Text>
         </View>
       </ScrollView>
       <View style={styles.orderCardPayment}>
-        <Text style={styles.textTotalPricePayment}>Rp 26.000</Text>
+        <Text style={styles.textTotalPricePayment}>
+          {pesananData.length > 0
+            ? `Rp ${pesananData[0].total_harga.toLocaleString("id-ID")}`
+            : "Rp 0"}
+        </Text>
         <TouchableOpacity
           style={styles.buttonSelectPayment}
-          onPress={() => navigation.navigate("SelectPayment")}
+          onPress={() =>
+            navigation.navigate("SelectPayment", {
+              currentOrderId: currentOrderId,
+              user: user,
+              pesananData: pesananData,
+              selectedMenu: selectedMenu,
+            })
+          }
         >
           <Text style={styles.textSelectPayment}>Select Payment</Text>
         </TouchableOpacity>
@@ -106,20 +164,24 @@ const styles = StyleSheet.create({
     justifyContent: "flex-start",
   },
   productImage: {
+    flex: 1,
     width: 100,
-    height: 100,
+    height: 90,
     marginRight: 10,
     borderRadius: 50,
     borderWidth: 1,
     borderColor: "#EE7B00",
   },
   productContent: {
+    flex: 2,
     flexDirection: "column",
     justifyContent: "center",
+    paddingLeft: 3,
   },
   productName: {
     fontSize: 16,
     fontWeight: "bold",
+    maxWidth: 200,
   },
   productSize: {
     fontSize: 14,
@@ -131,7 +193,8 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   productQuantity: {
-    paddingLeft: 40,
+    paddingLeft: 20,
+    paddingBottom: 10,
     fontSize: 14,
     color: "#959595",
     alignSelf: "flex-end",
@@ -176,7 +239,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   textSelectPayment: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: "bold",
     color: "#ffffff",
   },

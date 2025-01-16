@@ -35,6 +35,7 @@ export default function ReviewScreen({ navigation }) {
     setRating(0);
     setComment("");
     alert("Thank you for your review!");
+    navigation.navigate("HasilReviewScreen", { reviews });
   };
 
   const renderStar = (index) => {
