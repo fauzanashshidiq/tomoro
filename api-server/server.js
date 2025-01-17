@@ -15,7 +15,7 @@ app.use(bodyParser.json());
 const db = mysql.createConnection({
   host: "localhost", // Ganti dengan host Anda
   user: "root", // Ganti dengan username Anda
-  password: "admin123", // Ganti dengan password Anda
+  password: "_28Mei2004", // Ganti dengan password Anda
   database: "tomoro", // Ganti dengan nama database Anda
 });
 
@@ -293,7 +293,135 @@ app.post("/reviews", async (req, res) => {
   });
 });
 
+// Endpoint untuk mendapatkan reviews berdasarkan menu_id
+app.get("/reviews/:menuId", async (req, res) => {
+  const { menuId } = req.params;
+  console.log("review hit")
+  console.log("Received menuId:", menuId);
+
+  const query = `
+    SELECT 
+        m.image AS menu_image,
+        m.nama AS menu_name,
+        u.name AS username,
+        r.timestamp AS review_timestamp,
+        r.rating AS review_rating,
+        r.komen AS review_comment
+    FROM 
+        reviews r
+    JOIN 
+        pesanans p ON r.id_pesanan = p.id
+    JOIN 
+        menus m ON p.menu_id = m.id
+    JOIN 
+        users u ON p.user_id = u.id
+    WHERE 
+        m.id = ?
+    ORDER BY 
+        r.timestamp DESC;
+  `;
+
+  try {
+    // Eksekusi query dengan parameter menuId
+
+    db.query(query, [menuId], (err, result) => {
+      if (err) {
+        console.error("Error fetching reviews:", err);
+        return res.status(500).json({ message: "Internal server error" });
+      }
+      console.log(result.length)
+
+      // Jika tidak ada hasil
+      if (result.length === 0) {
+        return res.status(200).json([]);  // Tidak ada review, tapi respons tetap berhasil
+      }
+
+      // Kirimkan hasil ke client
+      res.json(result);
+    });
+  } catch (err) {
+    console.error("Error fetching reviews:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+app.get("/menu/:menuId", async (req, res) => {
+  const { menuId } = req.params;  // Ambil menuId dari parameter URL
+
+  try {
+    // Query untuk mengambil data menu berdasarkan menuId
+    const query = "SELECT nama, image FROM menus WHERE id = ?";
+    db.query(query, [menuId], (err, results) => {
+      if (err) {
+        console.error("Database query error:", err);
+        return res.status(500).send("Error fetching menus");
+      }
+
+      // Jika tidak ada hasil ditemukan
+      if (results.length === 0) {
+        return res.status(404).json({ message: "Menu not found" });
+      }
+
+      // Mengembalikan hasil
+      res.status(200).json(results[0]); // Mengirim data menu pertama
+    });
+  } catch (error) {
+    console.error("Error fetching menu:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+app.get("/review/:userId", async (req, res) => {
+  const { userId } = req.params;
+  console.log("review hit");
+  console.log("Received userId:", userId);
+
+  const query = `
+    SELECT 
+        r.id,
+        m.id AS menu_id,
+        r.rating AS review_rating,
+        r.komen AS review_comment
+    FROM 
+        reviews r
+    JOIN 
+        pesanans p ON r.id_pesanan = p.id
+    JOIN 
+        menus m ON p.menu_id = m.id
+    JOIN 
+        users u ON p.user_id = u.id
+    WHERE 
+        u.id = ?
+    ORDER BY 
+        r.timestamp DESC;
+  `;
+
+  try {
+    db.query(query, [userId], (err, result) => {
+      if (err) {
+        console.error("Error fetching reviews:", err);
+        return res.status(500).json({ message: "Internal server error" });
+      }
+      
+      console.log(result);
+
+      // Jika tidak ada hasil, cukup kirimkan respons kosong
+      if (result.length === 0) {
+        return res.status(200).json([]);  // Tidak ada review, tapi respons tetap berhasil
+      }
+
+      // Kirimkan hasil ke client
+      res.json(result);
+    });
+  } catch (err) {
+    console.error("Error fetching reviews:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+
+
 // Jalankan server
 app.listen(port, () => {
-  console.log(`Server running at http://192.168.203.178:${port}`);
+  console.log(`Server running at http://192.168.0.102:${port}`);
 });

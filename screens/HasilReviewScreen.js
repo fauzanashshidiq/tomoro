@@ -1,12 +1,55 @@
-import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { LinearGradient } from "expo-linear-gradient";
 
 export default function HasilReviewScreen({ route, navigation }) {
-  const { reviews } = route.params;
+  const { MenuId } = route.params; // Mengambil MenuId dari parameter navigasi
+  const [reviews, setReviews] = useState([]);
+  const [product, setProduct] = useState(null); // State untuk menyimpan data produk
+  const [loading, setLoading] = useState(true);
 
-  const { rating } = 4;
+  const imageMapping = {
+    "CloudSeriesExlusiveCombo.png": require("../assets/CloudSeriesExlusiveCombo.png"),
+    "StrawberryAmericano.jpg": require("../assets/StrawberryAmericano.jpg"),
+    "CheeseCloudLatte.jpg": require("../assets/CheeseCloudeLatte.jpg"),
+    "GrappefruitAmericano.jpg": require("../assets/GrappefruitAmericano.jpg"),
+    "LemonadeAmericano.jpg": require("../assets/LemonadeAmericano.jpg"),
+    "MatchaOatLatte.jpg": require("../assets/MatchaOatLatte.jpg"),
+    "HojichaOatLatte.jpg": require("../assets/HojichaOatLatte.jpg"),
+    // Tambahkan gambar lainnya sesuai dengan nama file di assets
+  };
+
+  // Fetch data produk dan reviews ketika komponen dimuat
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Fetch data produk
+        const productResponse = await axios.get(`http://192.168.0.102:5000/menu/${MenuId}`);
+        setProduct(productResponse.data);
+
+        // Fetch reviews
+        const reviewsResponse = await axios.get(`http://192.168.0.102:5000/reviews/${MenuId}`);
+        setReviews(reviewsResponse.data);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        alert("Failed to load data. Please try again later.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [MenuId]);
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text>Loading...</Text>
+      </View>
+    );
+  }
 
   return (
     <LinearGradient
@@ -24,64 +67,51 @@ export default function HasilReviewScreen({ route, navigation }) {
         </TouchableOpacity>
         <Text style={styles.headerText}>Review Results</Text>
       </View>
-      <View style={styles.container}>
+
+      {/* Menampilkan gambar dan nama produk di atas */}
+      {product && (
+        <View style={styles.container}>
         <View style={styles.reviewBox}>
           <Text style={styles.label}>Rate Your Order</Text>
           <View style={styles.productContainer}>
             <Image
-              source={require("../assets/StrawberryAmericano.jpg")}
+              source={imageMapping[product.image] || null}
               style={styles.productImage}
-            />
-            <Text style={styles.label}>Strawberry Americano</Text>
+              />
+            <Text style={styles.label}>{product.nama}</Text>
           </View>
         </View>
-        <View style={styles.reviewBoxReview}>
-          <View style={styles.containerLabelUser}>
-            <Text style={styles.labelName}>User Name</Text>
-            <Text style={styles.labelName}>Timestamp</Text>
-          </View>
-          <View style={styles.ratingContainer}>
-            {[1, 2, 3, 4, 5].map((star) => (
-              <Text
-                key={star}
-                style={{
-                  fontSize: 30,
-                  color: rating >= star ? "#FFD700" : "#CCCCCC",
-                  marginHorizontal: 1,
-                }}
-              >
-                ★
-              </Text>
-            ))}
-          </View>
-          <View style={styles.komenContainer}>
-            <Text style={styles.labelKomen}>Isi komen</Text>
-          </View>
         </View>
-        <View style={styles.reviewBoxReview}>
-          <View style={styles.containerLabelUser}>
-            <Text style={styles.labelName}>User Name</Text>
-            <Text style={styles.labelName}>Timestamp</Text>
+      )}
+
+      <ScrollView style={styles.container}>
+        {/* Menampilkan review-review produk */}
+        {reviews.map((review, index) => (
+          <View key={index} style={styles.reviewBoxReview}>
+            <View style={styles.containerLabelUser}>
+              <Text style={styles.labelName}>{review.username}</Text>
+              <Text style={styles.labelName}>{review.review_timestamp}</Text>
+            </View>
+            <View style={styles.ratingContainer}>
+              {[1, 2, 3, 4, 5].map((star) => (
+                <Text
+                  key={star}
+                  style={{
+                    fontSize: 30,
+                    color: review.review_rating >= star ? "#FFD700" : "#CCCCCC",
+                    marginHorizontal: 1,
+                  }}
+                >
+                  ★
+                </Text>
+              ))}
+            </View>
+            <View style={styles.komenContainer}>
+              <Text style={styles.labelKomen}>{review.review_comment}</Text>
+            </View>
           </View>
-          <View style={styles.ratingContainer}>
-            {[1, 2, 3, 4, 5].map((star) => (
-              <Text
-                key={star}
-                style={{
-                  fontSize: 30,
-                  color: rating >= star ? "#FFD700" : "#CCCCCC",
-                  marginHorizontal: 1,
-                }}
-              >
-                ★
-              </Text>
-            ))}
-          </View>
-          <View style={styles.komenContainer}>
-            <Text style={styles.labelKomen}>Isi komen</Text>
-          </View>
-        </View>
-      </View>
+        ))}
+      </ScrollView>
 
       <TouchableOpacity
         style={styles.doneButton}

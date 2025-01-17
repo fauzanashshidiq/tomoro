@@ -10,10 +10,11 @@ import {
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { LinearGradient } from "expo-linear-gradient";
 
-export default function ReviewScreen({ navigation }) {
+export default function ReviewScreen({ navigation, route }) {
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
   const [reviews, setReviews] = useState([]);
+  const { orderId, MenuId } = route.params;
 
   const handleRating = (selectedRating) => {
     setRating(selectedRating);
@@ -37,7 +38,7 @@ export default function ReviewScreen({ navigation }) {
       .substring(0, 19);
 
     const reviewData = {
-      id_pesanan: 4, // Replace with the actual order ID
+      id_pesanan: orderId, // Replace with the actual order ID
       rating,
       komen: comment, // Use 'komen' instead of 'comment' to match the database column name
       timestamp: formattedTimestamp,
@@ -45,7 +46,7 @@ export default function ReviewScreen({ navigation }) {
 
     try {
       const response = await axios.post(
-        "http://192.168.203.178:5000/reviews",
+        "http://192.168.0.102:5000/reviews",
         reviewData
       );
 
@@ -54,9 +55,11 @@ export default function ReviewScreen({ navigation }) {
         setReviews([reviewData, ...reviews]);
         setRating(0);
         setComment("");
-        navigation.navigate("HasilReviewScreen", {
-          reviews: [reviewData, ...reviews],
-        });
+        navigation.navigate("HasilReviewScreen", { MenuId: MenuId });
+        // navigation.navigate("HasilReviewScreen", {
+        //   menuId: menuId,
+        //   reviews: [reviewData, ...reviews],
+        // });
       } else {
         console.error("Failed to submit review:", response.statusText);
         alert("Failed to submit review. Please try again later.");

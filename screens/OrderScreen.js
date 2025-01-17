@@ -22,6 +22,7 @@ export default function OrderScreen({ userData }) {
   const [menuData, setMenuData] = useState([]); // State untuk menyimpan data menu
   const [paidOrders, setPaidOrders] = useState([]);
   const [unpaidOrders, setUnpaidOrders] = useState([]);
+  const [reviews, setReviews] = useState([]);
   const userId = userData.id; // Ganti dengan user_id pengguna saat ini
 
   const { rating } = 4;
@@ -41,7 +42,7 @@ export default function OrderScreen({ userData }) {
   useEffect(() => {
     const interval = setInterval(() => {
       axios
-        .get(`http://192.168.203.178:5000/pesanans2`, {
+        .get(`http://192.168.0.102:5000/pesanans2`, {
           params: {
             user_id: userId,
             status_pesanan: "Sudah Bayar",
@@ -65,7 +66,7 @@ export default function OrderScreen({ userData }) {
         });
 
       axios
-        .get(`http://192.168.203.178:5000/pesanans2`, {
+        .get(`http://192.168.0.102:5000/pesanans2`, {
           params: {
             user_id: userId,
             status_pesanan: "Belum Bayar",
@@ -89,7 +90,7 @@ export default function OrderScreen({ userData }) {
         });
 
       axios
-        .get("http://192.168.203.178:5000/menus")
+        .get("http://192.168.0.102:5000/menus")
         .then((response) => {
           setMenuData(response.data); // Simpan data ke state
           setLoading(false); // Set loading selesai
@@ -98,10 +99,18 @@ export default function OrderScreen({ userData }) {
           console.error("Error fetching data:", error);
           setLoading(false); // Set loading selesai meski ada error
         });
-    }, 100);
+        axios
+          .get(`http://192.168.0.102:5000/review/${userId}`)
+          .then((response) => {
+            setReviews(response.data);
+          })
+          .catch((error) => {
+            console.error("There was an error fetching the reviews:", error);
+          });
+    }, 5000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [userId]);
 
   return (
     <LinearGradient
@@ -272,7 +281,8 @@ export default function OrderScreen({ userData }) {
                       <TouchableOpacity
                         onPress={() =>
                           navigation.navigate("ReviewScreen", {
-                            productName: order.product_name,
+                            orderId: order.id,
+                            MenuId: order.menu_id,
                           })
                         }
                         style={styles.rateButtonContainer}
@@ -309,8 +319,9 @@ export default function OrderScreen({ userData }) {
                       <Text style={styles.productPrice}>
                         Rp {menu.harga.toLocaleString("id-ID")}
                       </Text>
-                      <TouchableOpacity
+                      <TouchableOpacity            
                         style={styles.rateButtonContainerReviews}
+                        onPress={() => navigation.navigate("HasilReviewScreen", {MenuId: menu.id})}
                       >
                         <Text style={styles.rateButtonTextReview}>
                           All Reviews
@@ -319,54 +330,59 @@ export default function OrderScreen({ userData }) {
                     </View>
                   </View>
                   <View style={styles.reviewBox}>
-                    <View
-                      style={{
-                        borderTopWidth: 1,
-                        marginVertical: 10,
-                        borderColor: "#EFEFEF",
-                      }}
-                    ></View>
-                    <Text style={styles.headerReviewText}>Your Review</Text>
-                    <View
-                      style={{
-                        flexDirection: "row",
-                        justifyContent: "space-between",
-                      }}
+            {reviews
+              .filter(review => review.menu_id === menu.id)  // Filter review berdasarkan menu_id
+              .map((review, index) => (
+                <View key={index}>
+                  <View
+                    style={{
+                      borderTopWidth: 1,
+                      marginVertical: 10,
+                      borderColor: "#EFEFEF",
+                    }}
+                  ></View>
+                  <Text style={styles.headerReviewText}>Your Review</Text>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                    }}
+                  >
+                    <View style={styles.ratingContainer}>
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <Text
+                          key={star}
+                          style={{
+                            fontSize: 30,
+                            color: review.review_rating >= star ? "#FFD700" : "#CCCCCC",
+                            marginHorizontal: 1,
+                          }}
+                        >
+                          ★
+                        </Text>
+                      ))}
+                    </View>
+                    <TouchableOpacity
+                      style={styles.editButton}
+                      onPress={() =>
+                        Alert.alert("Your Review", "What do you want?", [
+                          { text: "Cancel" },
+                          { text: "Delete" },
+                          { text: "Edit" },
+                        ])
+                      }
                     >
-                      <View style={styles.ratingContainer}>
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <Text
-                            key={star}
-                            style={{
-                              fontSize: 30,
-                              color: rating >= star ? "#FFD700" : "#CCCCCC",
-                              marginHorizontal: 1,
-                            }}
-                          >
-                            ★
-                          </Text>
-                        ))}
-                      </View>
-                      <TouchableOpacity
-                        style={styles.editButton}
-                        onPress={() =>
-                          Alert.alert("Your Review", "What do you want?", [
-                            { text: "Cancel" },
-                            { text: "Delete" },
-                            { text: "Edit" },
-                          ])
-                        }
-                      >
-                        <Text style={styles.editIcon}>✎</Text>
-                      </TouchableOpacity>
-                    </View>
-                    <View style={styles.komenContainer}>
-                      <Text style={styles.labelKomen}>
-                        Isi komen asdkjhuhduilsha udihisaoud ph saidhsaoi
-                        sadhsaoudh aosuhdiosah dios
-                      </Text>
-                    </View>
+                      <Text style={styles.editIcon}>✎</Text>
+                    </TouchableOpacity>
                   </View>
+                  <View style={styles.komenContainer}>
+                    <Text style={styles.labelKomen}>
+                      {review.review_comment || "No review yet."}
+                    </Text>
+                  </View>
+                </View>
+              ))}
+          </View>
                 </View>
               ))
             )}

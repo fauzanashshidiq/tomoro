@@ -17,7 +17,7 @@ export default function OTPVerificationScreen({ route, navigation }) {
   const handleVerifyOTP = () => {
     const otpCode = otp.join(""); // Gabungkan semua digit menjadi satu string
     axios
-      .post("http://192.168.203.178:5000/verify-otp", { phone, otp: otpCode })
+      .post("http://192.168.0.102:5000/verify-otp", { phone, otp: otpCode })
       .then(() => {
         Alert.alert("Registration successful!", "Verification successful!");
         navigation.navigate("Login");
