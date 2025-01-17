@@ -6,6 +6,7 @@ import {
   ScrollView,
   StyleSheet,
   TouchableOpacity,
+  Alert,
 } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { useNavigation } from "@react-navigation/native";
@@ -17,14 +18,23 @@ export default function OrderScreen({ userData }) {
   const [activeTab, setActiveTab] = useState("cart");
   const navigation = useNavigation();
 
+  const [loading, setLoading] = useState(true); // State untuk loading
+  const [menuData, setMenuData] = useState([]); // State untuk menyimpan data menu
   const [paidOrders, setPaidOrders] = useState([]);
   const [unpaidOrders, setUnpaidOrders] = useState([]);
   const userId = userData.id; // Ganti dengan user_id pengguna saat ini
 
+  const { rating } = 4;
+
   // Mapping gambar berdasarkan nama
   const imageMapping = {
-    "StrawberryAmericano.jpg": require("../assets/StrawberryAmericano.jpg"),
     "CloudSeriesExlusiveCombo.png": require("../assets/CloudSeriesExlusiveCombo.png"),
+    "StrawberryAmericano.jpg": require("../assets/StrawberryAmericano.jpg"),
+    "CheeseCloudLatte.jpg": require("../assets/CheeseCloudeLatte.jpg"),
+    "GrappefruitAmericano.jpg": require("../assets/GrappefruitAmericano.jpg"),
+    "LemonadeAmericano.jpg": require("../assets/LemonadeAmericano.jpg"),
+    "MatchaOatLatte.jpg": require("../assets/MatchaOatLatte.jpg"),
+    "HojichaOatLatte.jpg": require("../assets/HojichaOatLatte.jpg"),
     // Tambahkan gambar lainnya sesuai dengan nama file di assets
   };
 
@@ -77,7 +87,18 @@ export default function OrderScreen({ userData }) {
         .catch((error) => {
           console.error("Error fetching data:", error);
         });
-    }, 100); // Poll setiap 5 detik
+
+      axios
+        .get("http://192.168.203.178:5000/menus")
+        .then((response) => {
+          setMenuData(response.data); // Simpan data ke state
+          setLoading(false); // Set loading selesai
+        })
+        .catch((error) => {
+          console.error("Error fetching data:", error);
+          setLoading(false); // Set loading selesai meski ada error
+        });
+    }, 100);
 
     return () => clearInterval(interval);
   }, []);
@@ -112,31 +133,9 @@ export default function OrderScreen({ userData }) {
               activeTab === "cart" && styles.activeTabText,
             ]}
           >
-            Chart
+            Cart
           </Text>
         </TouchableOpacity>
-
-        {/* <TouchableOpacity
-            style={[
-              styles.tabButton,
-              activeTab === "inprogress" && styles.activeTab,
-            ]}
-            onPress={() => setActiveTab("inprogress")}
-          >
-            <Ionicons
-              name="time-outline"
-              size={30}
-              color={activeTab === "inprogress" ? "#EE7B00" : "#8E8E93"}
-            />
-            <Text
-              style={[
-                styles.tabText,
-                activeTab === "inprogress" && styles.activeTabText,
-              ]}
-            >
-              In Progress
-            </Text>
-          </TouchableOpacity> */}
 
         <TouchableOpacity
           style={[
@@ -192,9 +191,11 @@ export default function OrderScreen({ userData }) {
               {Array.isArray(unpaidOrders) && unpaidOrders.length === 0 ? (
                 <View style={styles.orderCard}>
                   <Text style={{ fontSize: 16, fontWeight: "bold" }}>
-                    Your Chart
+                    Your Cart
                   </Text>
-                  <Text>No orders yet. Select "Menu" to make an order.</Text>
+                  <Text>
+                    No items in your cart. Select "Menu" to add items.
+                  </Text>
                 </View>
               ) : (
                 unpaidOrders.map((order) => (
@@ -220,8 +221,9 @@ export default function OrderScreen({ userData }) {
                         >{`${order.quantity} Item`}</Text>
                         <TouchableOpacity
                           onPress={() =>
-                            navigation.navigate("ReviewScreen", {
-                              productName: order.product_name,
+                            navigation.navigate("CheckoutScreen", {
+                              unpaidOrders: [order], // Kirimkan hanya data pesanan ini
+                              selectedMenu: order, // Kirimkan data menu yang terkait
                             })
                           }
                           style={styles.rateButtonContainer}
@@ -284,34 +286,90 @@ export default function OrderScreen({ userData }) {
             )}
           </View>
         )}
-        {/* <View style={styles.orderCard}>
-              <View style={styles.completedOrderHeader}>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.locationText}>Cikutra</Text>
-                  <Text style={styles.dateText}>02/11/2024 10:19</Text>
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.completedStatus}>Completed</Text>
-                </View>
-              </View>
-              <View style={styles.orderDetails}>
-                <View style={styles.imageContainer}>
-                  <Image
-                    source={require("../assets/StrawberryAmericano.jpg")}
-                    style={styles.productImage}
-                  />
-                </View>
-                <Text style={styles.productName}>Strawberry Americano</Text>
-                <View>
-                  <Text style={styles.productPrice}>Rp 26.000</Text>
-                  <Text style={styles.productQuantity}>1 Item</Text>
-                </View>
-              </View>
-            </View> */}
         {activeTab === "reviews" && (
-          <View style={styles.reviewsContainer}>
-            <Text style={styles.reviewsHeader}>Your Reviews</Text>
-            <Text>No reviews yet. Tap "Rate" to add a review.</Text>
+          <View style={styles.tabContent}>
+            {loading ? (
+              <Text style={{ textAlign: "center", marginTop: 20 }}>
+                Loading data menu...
+              </Text>
+            ) : (
+              menuData.map((menu, index) => (
+                <View key={menu.id || index} style={styles.orderCardReview}>
+                  <Text style={styles.locationText}>Cikutra</Text>
+                  <Text style={styles.dateText}></Text>
+                  <View style={styles.orderDetails}>
+                    <View style={styles.imageContainer}>
+                      <Image
+                        source={imageMapping[menu.image] || null}
+                        style={styles.productImage}
+                      />
+                    </View>
+                    <Text style={styles.productName}>{menu.nama}</Text>
+                    <View>
+                      <Text style={styles.productPrice}>
+                        Rp {menu.harga.toLocaleString("id-ID")}
+                      </Text>
+                      <TouchableOpacity
+                        style={styles.rateButtonContainerReviews}
+                      >
+                        <Text style={styles.rateButtonTextReview}>
+                          All Reviews
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                  <View style={styles.reviewBox}>
+                    <View
+                      style={{
+                        borderTopWidth: 1,
+                        marginVertical: 10,
+                        borderColor: "#EFEFEF",
+                      }}
+                    ></View>
+                    <Text style={styles.headerReviewText}>Your Review</Text>
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      <View style={styles.ratingContainer}>
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <Text
+                            key={star}
+                            style={{
+                              fontSize: 30,
+                              color: rating >= star ? "#FFD700" : "#CCCCCC",
+                              marginHorizontal: 1,
+                            }}
+                          >
+                            ★
+                          </Text>
+                        ))}
+                      </View>
+                      <TouchableOpacity
+                        style={styles.editButton}
+                        onPress={() =>
+                          Alert.alert("Your Review", "What do you want?", [
+                            { text: "Cancel" },
+                            { text: "Delete" },
+                            { text: "Edit" },
+                          ])
+                        }
+                      >
+                        <Text style={styles.editIcon}>✎</Text>
+                      </TouchableOpacity>
+                    </View>
+                    <View style={styles.komenContainer}>
+                      <Text style={styles.labelKomen}>
+                        Isi komen asdkjhuhduilsha udihisaoud ph saidhsaoi
+                        sadhsaoudh aosuhdiosah dios
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              ))
+            )}
           </View>
         )}
       </ScrollView>
@@ -432,22 +490,70 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#EE7B00",
   },
+  rateButtonContainerReviews: {
+    marginTop: 10,
+    paddingHorizontal: 5,
+    paddingVertical: 4,
+    backgroundColor: "#ffffff",
+    borderRadius: 15,
+    alignSelf: "flex-end",
+    borderWidth: 1,
+    borderColor: "#EE7B00",
+  },
   rateButtonText: {
     fontSize: 13,
     fontWeight: "bold",
     color: "#EE7B00",
     textAlign: "center",
   },
-  reviewsContainer: {
-    padding: 16,
-    backgroundColor: "#ffffff",
-    borderRadius: 12,
+  rateButtonTextReview: {
+    fontSize: 12,
+    fontWeight: "bold",
+    color: "#EE7B00",
+    textAlign: "center",
+  },
+  orderCardReview: {
     marginHorizontal: "5%",
     marginVertical: 5,
+    backgroundColor: "#ffffff",
+    borderRadius: 12,
+    padding: 16,
     elevation: 4,
+    justifyContent: "center",
   },
-  reviewsHeader: {
-    fontSize: 16,
+  headerReviewText: {
+    fontSize: 14,
     fontWeight: "bold",
+    textAlign: "center",
+    marginBottom: 10,
+  },
+  containerLabelUser: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  ratingContainer: {
+    flexDirection: "row",
+    marginTop: -10,
+    marginLeft: 0,
+  },
+  komenContainer: {
+    marginTop: 10,
+    borderWidth: 1,
+    borderRadius: 5,
+    padding: 10,
+    borderColor: "#EFEFEF",
+  },
+  labelKomen: {
+    fontSize: 13,
+    color: "#333",
+    textAlign: "justify",
+  },
+  editButton: {
+    marginLeft: 10,
+    justifyContent: "center",
+  },
+  editIcon: {
+    fontSize: 20,
+    color: "#EE7B00",
   },
 });

@@ -1,17 +1,12 @@
 import React from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  TouchableOpacity,
-  Image,
-} from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { LinearGradient } from "expo-linear-gradient";
 
 export default function HasilReviewScreen({ route, navigation }) {
   const { reviews } = route.params;
+
+  const { rating } = 4;
 
   return (
     <LinearGradient
@@ -40,32 +35,57 @@ export default function HasilReviewScreen({ route, navigation }) {
             <Text style={styles.label}>Strawberry Americano</Text>
           </View>
         </View>
-      </View>
-
-      <FlatList
-        data={reviews}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
-          <View style={styles.reviewCard}>
-            <View style={styles.reviewHeader}>
-              {[...Array(5)].map((_, i) => (
-                <Ionicons
-                  key={i}
-                  name={i < item.rating ? "star" : "star-outline"}
-                  size={20}
-                  color={i < item.rating ? "#FFD700" : "#CCCCCC"}
-                />
-              ))}
-            </View>
-            <Text style={styles.reviewComment}>{item.comment}</Text>
+        <View style={styles.reviewBoxReview}>
+          <View style={styles.containerLabelUser}>
+            <Text style={styles.labelName}>User Name</Text>
+            <Text style={styles.labelName}>Timestamp</Text>
           </View>
-        )}
-        contentContainerStyle={styles.reviewsList}
-      />
+          <View style={styles.ratingContainer}>
+            {[1, 2, 3, 4, 5].map((star) => (
+              <Text
+                key={star}
+                style={{
+                  fontSize: 30,
+                  color: rating >= star ? "#FFD700" : "#CCCCCC",
+                  marginHorizontal: 1,
+                }}
+              >
+                ★
+              </Text>
+            ))}
+          </View>
+          <View style={styles.komenContainer}>
+            <Text style={styles.labelKomen}>Isi komen</Text>
+          </View>
+        </View>
+        <View style={styles.reviewBoxReview}>
+          <View style={styles.containerLabelUser}>
+            <Text style={styles.labelName}>User Name</Text>
+            <Text style={styles.labelName}>Timestamp</Text>
+          </View>
+          <View style={styles.ratingContainer}>
+            {[1, 2, 3, 4, 5].map((star) => (
+              <Text
+                key={star}
+                style={{
+                  fontSize: 30,
+                  color: rating >= star ? "#FFD700" : "#CCCCCC",
+                  marginHorizontal: 1,
+                }}
+              >
+                ★
+              </Text>
+            ))}
+          </View>
+          <View style={styles.komenContainer}>
+            <Text style={styles.labelKomen}>Isi komen</Text>
+          </View>
+        </View>
+      </View>
 
       <TouchableOpacity
         style={styles.doneButton}
-        onPress={() => navigation.navigate("Home")}
+        onPress={() => navigation.navigate("OrderScreen")}
       >
         <Text style={styles.doneButtonText}>DONE</Text>
       </TouchableOpacity>
@@ -126,24 +146,30 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    justifyContent: "space-between",
     padding: 20,
   },
   reviewBox: {
     backgroundColor: "#ffffff",
     borderRadius: 10,
+    padding: 10,
+    elevation: 5,
+    marginBottom: 10,
+  },
+  reviewBoxReview: {
+    backgroundColor: "#ffffff",
+    borderRadius: 10,
     padding: 20,
     elevation: 5,
-    marginBottom: 20,
+    marginBottom: 5,
   },
   label: {
     fontSize: 16,
     fontWeight: "bold",
-    marginBottom: 10,
     textAlign: "center",
   },
   productContainer: {
     flexDirection: "row", // Membuat gambar dan teks sejajar secara horizontal
+    justifyContent: "center",
     alignItems: "center", // Menyelaraskan secara vertikal di tengah
     marginVertical: 10,
     paddingHorizontal: 10, // Memberikan padding untuk mencegah elemen terlalu menempel ke tepi
@@ -154,13 +180,34 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     borderWidth: 1,
     borderColor: "#EE7B00",
-    marginRight: 10, // Memberikan jarak yang lebih baik antara gambar dan teks
+    marginRight: 20, // Memberikan jarak yang lebih baik antara gambar dan teks
+  },
+  containerLabelUser: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 2,
+  },
+  ratingContainer: {
+    flexDirection: "row",
+    marginTop: -10,
+    marginLeft: 0,
   },
   labelName: {
-    fontSize: 16,
+    fontSize: 13,
     fontWeight: "bold",
-    textAlign: "left",
     color: "#333",
-    flex: 1, // Memastikan teks tidak terlalu jauh ke kanan dan menempati ruang yang tersisa
+    paddingLeft: 2,
+  },
+  komenContainer: {
+    marginTop: 10,
+    borderWidth: 1,
+    borderRadius: 5,
+    padding: 10,
+    borderColor: "#EFEFEF",
+  },
+  labelKomen: {
+    fontSize: 13,
+    color: "#333",
+    textAlign: "justify",
   },
 });

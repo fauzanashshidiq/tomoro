@@ -14,8 +14,13 @@ export default function MenuModal({ isVisible, onClose, menuData, userData }) {
 
   // Mapping gambar berdasarkan nama
   const imageMapping = {
-    "StrawberryAmericano.jpg": require("../../assets/StrawberryAmericano.jpg"),
     "CloudSeriesExlusiveCombo.png": require("../../assets/CloudSeriesExlusiveCombo.png"),
+    "StrawberryAmericano.jpg": require("../../assets/StrawberryAmericano.jpg"),
+    "CheeseCloudLatte.jpg": require("../../assets/CheeseCloudeLatte.jpg"),
+    "GrappefruitAmericano.jpg": require("../../assets/GrappefruitAmericano.jpg"),
+    "LemonadeAmericano.jpg": require("../../assets/LemonadeAmericano.jpg"),
+    "MatchaOatLatte.jpg": require("../../assets/MatchaOatLatte.jpg"),
+    "HojichaOatLatte.jpg": require("../../assets/HojichaOatLatte.jpg"),
     // Tambahkan gambar lainnya sesuai dengan nama file di assets
   };
 
@@ -182,7 +187,7 @@ export default function MenuModal({ isVisible, onClose, menuData, userData }) {
           style={styles.addToChartButton}
           onPress={handleAddToCart}
         >
-          <Text style={styles.addToChartText}>Add to Chart</Text>
+          <Text style={styles.addToChartText}>Add to Cart</Text>
         </TouchableOpacity>
       </View>
     </Modal>

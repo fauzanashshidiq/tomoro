@@ -13,6 +13,7 @@ export default function PaymentSuccessScreen({ route }) {
   const navigation = useNavigation();
   const { paymentMethod } = route.params; // Retrieve the passed payment method data
   const { pesananData } = route.params;
+  const { unpaidOrders } = route.params; // Tambahkan unpaidOrders
   const { user } = route.params;
 
   // Formatkan timestamp menjadi tanggal yang diinginkan
@@ -31,6 +32,10 @@ export default function PaymentSuccessScreen({ route }) {
 
     return new Intl.DateTimeFormat("id-ID", options).format(date); // id-ID untuk bahasa Indonesia
   };
+
+  // Gunakan pesananData atau unpaidOrders jika salah satu tidak tersedia
+  const displayOrder =
+    pesananData?.length > 0 ? pesananData[0] : unpaidOrders?.[0] || {};
 
   return (
     <View style={styles.container}>
@@ -52,8 +57,8 @@ export default function PaymentSuccessScreen({ route }) {
             />
           </View>
           <Text style={styles.textPaymentMethod}>
-            {pesananData.length > 0
-              ? `Rp ${pesananData[0].total_harga.toLocaleString("id-ID")}`
+            {displayOrder?.total_harga
+              ? `Rp ${displayOrder.total_harga.toLocaleString("id-ID")}`
               : "Rp 0"}
           </Text>
           <Text style={styles.textTitleDetail}>Nomor Pesanan</Text>
@@ -62,12 +67,15 @@ export default function PaymentSuccessScreen({ route }) {
           <Text style={styles.textDetail}>AXILF91000</Text>
           <Text style={styles.textTitleDetail}>Tanggal Pembayaran</Text>
           <Text style={styles.textDetail}>
-            {pesananData && pesananData[0]
-              ? formatTimestamp(pesananData[0].timestamp)
+            {displayOrder?.timestamp
+              ? formatTimestamp(displayOrder.timestamp)
               : "Loading..."}
           </Text>
           <Text style={styles.textTitleDetail}>Nama Pemesan</Text>
-          <Text style={styles.textDetail}>{user}</Text>
+          <Text style={styles.textDetail}>
+            {user || unpaidOrders?.[0]?.user_name || "Tidak diketahui"}
+          </Text>
+
           <View style={styles.paymentMethodHeaderBottom}></View>
         </View>
       </ScrollView>
@@ -77,7 +85,19 @@ export default function PaymentSuccessScreen({ route }) {
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.closeButton}
-          onPress={() => navigation.navigate("MenuScreen")}
+          onPress={() => {
+            // Cek jika currentOrderId ada, maka navigasi ke MenuScreen
+            if (user) {
+              navigation.navigate("MenuScreen");
+            }
+            // Cek jika unpaidOrders ada, maka navigasi ke OrderScreen
+            else if (Array.isArray(unpaidOrders) && unpaidOrders.length > 0) {
+              navigation.navigate("OrderScreen");
+            } else {
+              // Tindakan default jika tidak ada kondisi yang memenuhi
+              Alert.alert("Error", "Tidak ada data untuk dilanjutkan");
+            }
+          }}
         >
           <Text style={styles.closeButtonText}>Tutup</Text>
         </TouchableOpacity>

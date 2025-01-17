@@ -143,7 +143,6 @@ app.post("/login", (req, res) => {
 });
 
 app.get("/menus", (req, res) => {
-  console.log("Endpoint /menus was hit!");
   db.query(
     "SELECT id, nama, image, rating, harga FROM menus",
     (err, results) => {
@@ -226,10 +225,11 @@ app.get("/pesanans2", async (req, res) => {
   const { user_id, status_pesanan } = req.query;
 
   const query = `
-    SELECT p.*, m.nama, m.image
-  FROM pesanans p 
-  JOIN menus m ON p.menu_id = m.id
-  WHERE p.user_id = ? AND p.status_pesanan = ?
+    SELECT p.*, m.nama, m.image, u.name AS user_name
+    FROM pesanans p
+    JOIN menus m ON p.menu_id = m.id
+    JOIN users u ON p.user_id = u.id
+    WHERE p.user_id = ? AND p.status_pesanan = ?
   `;
 
   db.query(query, [user_id, status_pesanan], (err, results) => {
@@ -239,6 +239,57 @@ app.get("/pesanans2", async (req, res) => {
         .json({ message: "Error fetching data", error: err });
     }
     res.json(results);
+  });
+});
+
+// Endpoint reviews
+app.post("/reviews", async (req, res) => {
+  const { id_pesanan, rating, komen, timestamp } = req.body;
+
+  // Check if required fields exist
+  if (!id_pesanan || !rating || !komen) {
+    return res.status(400).json({ message: "Missing required fields" });
+  }
+
+  // Ensure timestamp is defined
+  const formattedTimestamp = timestamp
+    ? timestamp.replace("T", " ").substring(0, 19)
+    : null;
+
+  // Proceed with query to check if id_pesanan exists
+  const checkQuery = `SELECT id FROM pesanans WHERE id = ?`;
+
+  db.query(checkQuery, [id_pesanan], (err, result) => {
+    if (err) {
+      console.error("Database error:", err);
+      return res.status(500).json({ message: "Database error", error: err });
+    }
+
+    if (result.length === 0) {
+      return res.status(400).json({ message: "Order ID does not exist." });
+    }
+
+    // Insert the review if everything is valid
+    const query = `
+      INSERT INTO reviews (id_pesanan, rating, komen, timestamp)
+      VALUES (?, ?, ?, ?)
+    `;
+
+    db.query(
+      query,
+      [id_pesanan, rating, komen, formattedTimestamp],
+      (err, result) => {
+        if (err) {
+          console.error("Error inserting review:", err);
+          return res
+            .status(500)
+            .json({ message: "Error inserting review", error: err });
+        }
+
+        console.log("Review inserted successfully");
+        res.status(201).json({ message: "Review submitted successfully" });
+      }
+    );
   });
 });
 

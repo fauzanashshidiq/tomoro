@@ -1,12 +1,11 @@
 import React, { useState } from "react";
+import axios from "axios";
 import {
   View,
   Text,
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  FlatList,
-  ScrollView,
 } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -20,22 +19,52 @@ export default function ReviewScreen({ navigation }) {
     setRating(selectedRating);
   };
 
-  const submitReview = () => {
-    if (rating === 0 || comment.trim() === "") {
-      alert("Please provide a rating and a comment.");
+  const submitReview = async () => {
+    if (!rating || rating <= 0) {
+      alert("Please provide a valid rating between 1 and 5.");
       return;
     }
 
-    const newReview = {
-      id: Date.now(),
+    if (!comment.trim()) {
+      alert("Please provide a comment.");
+      return;
+    }
+
+    // Ensure timestamp is formatted properly
+    const formattedTimestamp = new Date()
+      .toISOString()
+      .replace("T", " ")
+      .substring(0, 19);
+
+    const reviewData = {
+      id_pesanan: 4, // Replace with the actual order ID
       rating,
-      comment,
+      komen: comment, // Use 'komen' instead of 'comment' to match the database column name
+      timestamp: formattedTimestamp,
     };
-    setReviews([newReview, ...reviews]);
-    setRating(0);
-    setComment("");
-    alert("Thank you for your review!");
-    navigation.navigate("HasilReviewScreen", { reviews });
+
+    try {
+      const response = await axios.post(
+        "http://192.168.203.178:5000/reviews",
+        reviewData
+      );
+
+      if (response.status === 201 || response.status === 200) {
+        alert("Thank you for your review!");
+        setReviews([reviewData, ...reviews]);
+        setRating(0);
+        setComment("");
+        navigation.navigate("HasilReviewScreen", {
+          reviews: [reviewData, ...reviews],
+        });
+      } else {
+        console.error("Failed to submit review:", response.statusText);
+        alert("Failed to submit review. Please try again later.");
+      }
+    } catch (error) {
+      console.error("An error occurred while submitting the review:", error);
+      alert("An error occurred. Please try again later.");
+    }
   };
 
   const renderStar = (index) => {
@@ -74,7 +103,6 @@ export default function ReviewScreen({ navigation }) {
             {[...Array(5)].map((_, i) => renderStar(i))}
           </View>
         </View>
-
         <View style={styles.commentBox}>
           <Text style={styles.label}>Comment Your Order</Text>
           <TextInput
@@ -85,27 +113,6 @@ export default function ReviewScreen({ navigation }) {
             multiline
           />
         </View>
-
-        <FlatList
-          data={reviews}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={({ item }) => (
-            <View style={styles.reviewCard}>
-              <View style={styles.reviewHeader}>
-                {[...Array(5)].map((_, i) => (
-                  <Ionicons
-                    key={i}
-                    name={i < item.rating ? "star" : "star-outline"}
-                    size={20}
-                    color={i < item.rating ? "#FFD700" : "#CCCCCC"}
-                  />
-                ))}
-              </View>
-              <Text style={styles.reviewComment}>{item.comment}</Text>
-            </View>
-          )}
-          style={styles.reviewsList}
-        />
       </View>
 
       <TouchableOpacity style={styles.submitButton} onPress={submitReview}>
@@ -117,11 +124,9 @@ export default function ReviewScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   header: {
-    width: "auto",
-    height: "auto",
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 30,
+    paddingVertical: 45,
     backgroundColor: "#ffffff",
     elevation: 10,
     paddingHorizontal: 20,
@@ -129,16 +134,13 @@ const styles = StyleSheet.create({
   headerText: {
     fontSize: 20,
     fontWeight: "bold",
-    marginTop: 20,
     flex: 2,
   },
   backButton: {
     flex: 1,
-    marginTop: 20,
   },
   container: {
     flex: 1,
-    justifyContent: "space-between",
     padding: 20,
   },
   reviewBox: {
@@ -156,8 +158,8 @@ const styles = StyleSheet.create({
   },
   starsContainer: {
     flexDirection: "row",
-    marginBottom: 20,
     justifyContent: "center",
+    marginBottom: 20,
   },
   commentBox: {
     backgroundColor: "#ffffff",
@@ -174,13 +176,14 @@ const styles = StyleSheet.create({
     height: 100,
     textAlignVertical: "top",
     marginBottom: 20,
+    textAlign: "justify",
   },
   submitButton: {
     backgroundColor: "#EE7B00",
     padding: 15,
     borderRadius: 10,
     alignItems: "center",
-    marginBottom: 20, // Memberikan jarak dari bawah layar
+    marginBottom: 20,
     marginHorizontal: 20,
   },
   submitButtonText: {
@@ -200,7 +203,7 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   reviewHeader: {
-    flexDirection: "row",
+    fontWeight: "bold",
     marginBottom: 10,
   },
   reviewComment: {

@@ -18,17 +18,26 @@ export default function CheckoutScreen({ route }) {
   const { selectedMenu } = route.params;
   const { currentOrderId } = route.params;
   const { user } = route.params;
+  const { unpaidOrders } = route.params;
   const [pesananData, setPesananData] = useState([]);
 
   // Mapping gambar berdasarkan nama
   const imageMapping = {
-    "StrawberryAmericano.jpg": require("../assets/StrawberryAmericano.jpg"),
     "CloudSeriesExlusiveCombo.png": require("../assets/CloudSeriesExlusiveCombo.png"),
+    "StrawberryAmericano.jpg": require("../assets/StrawberryAmericano.jpg"),
+    "CheeseCloudLatte.jpg": require("../assets/CheeseCloudeLatte.jpg"),
+    "GrappefruitAmericano.jpg": require("../assets/GrappefruitAmericano.jpg"),
+    "LemonadeAmericano.jpg": require("../assets/LemonadeAmericano.jpg"),
+    "MatchaOatLatte.jpg": require("../assets/MatchaOatLatte.jpg"),
+    "HojichaOatLatte.jpg": require("../assets/HojichaOatLatte.jpg"),
     // Tambahkan gambar lainnya sesuai dengan nama file di assets
   };
 
   // Menentukan gambar berdasarkan nama dari menuData
-  const menuImage = imageMapping[selectedMenu?.image] || null; // Jika gambar tidak ditemukan, null
+  const menuImage =
+    imageMapping[selectedMenu?.image] ||
+    (Array.isArray(unpaidOrders) && imageMapping[unpaidOrders[0]?.image]) ||
+    null;
 
   useEffect(() => {
     if (currentOrderId) {
@@ -68,7 +77,9 @@ export default function CheckoutScreen({ route }) {
                 numberOfLines={2} // Membatasi hanya 1 baris
                 ellipsizeMode="tail" // Menambahkan "..." di akhir teks jika terlalu panjang
               >
-                {selectedMenu.nama}
+                {selectedMenu?.nama ||
+                  (Array.isArray(unpaidOrders) && unpaidOrders[0]?.nama) ||
+                  "Unknown Product"}
               </Text>
               <Text style={styles.productSize}>
                 {""}
@@ -76,15 +87,32 @@ export default function CheckoutScreen({ route }) {
                   ? `${pesananData[0].size}, ${
                       pesananData[0].quantity === 1 ? "Iced" : "Non-Iced"
                     }`
+                  : Array.isArray(unpaidOrders) &&
+                    unpaidOrders[0]?.size &&
+                    unpaidOrders[0]?.quantity
+                  ? `${unpaidOrders[0].size}, ${
+                      unpaidOrders[0].quantity === 1 ? "Iced" : "Non-Iced"
+                    }`
                   : " "}
               </Text>
               <Text style={styles.productPrice}>
-                Rp {selectedMenu.harga.toLocaleString("id-ID")}
+                Rp{" "}
+                {selectedMenu?.harga?.toLocaleString("id-ID") ||
+                  (Array.isArray(unpaidOrders) &&
+                  unpaidOrders[0]?.total_harga &&
+                  unpaidOrders[0]?.quantity
+                    ? (
+                        unpaidOrders[0]?.total_harga / unpaidOrders[0]?.quantity
+                      ).toLocaleString("id-ID")
+                    : "0")}
               </Text>
             </View>
             <Text style={styles.productQuantity}>
-              {""}
-              {pesananData.length > 0 ? `${pesananData[0].quantity}x` : "0"}
+              {pesananData.length > 0
+                ? `${pesananData[0].quantity.toLocaleString()}x`
+                : Array.isArray(unpaidOrders) && unpaidOrders[0]?.quantity
+                ? `${unpaidOrders[0].quantity.toLocaleString()}x`
+                : "0"}
             </Text>
           </View>
         </View>
@@ -92,7 +120,9 @@ export default function CheckoutScreen({ route }) {
           <Text style={styles.textTotal}>Total</Text>
           <Text style={styles.textTotalPrice}>
             {pesananData.length > 0
-              ? `Rp ${pesananData[0].total_harga.toLocaleString("id-ID")}`
+              ? `Rp ${pesananData[0]?.total_harga?.toLocaleString("id-ID")}`
+              : Array.isArray(unpaidOrders) && unpaidOrders.length > 0
+              ? `Rp ${unpaidOrders[0]?.total_harga?.toLocaleString("id-ID")}`
               : "Rp 0"}
           </Text>
         </View>
@@ -100,17 +130,20 @@ export default function CheckoutScreen({ route }) {
       <View style={styles.orderCardPayment}>
         <Text style={styles.textTotalPricePayment}>
           {pesananData.length > 0
-            ? `Rp ${pesananData[0].total_harga.toLocaleString("id-ID")}`
+            ? `Rp ${pesananData[0]?.total_harga?.toLocaleString("id-ID")}`
+            : Array.isArray(unpaidOrders) && unpaidOrders.length > 0
+            ? `Rp ${unpaidOrders[0]?.total_harga?.toLocaleString("id-ID")}`
             : "Rp 0"}
         </Text>
         <TouchableOpacity
           style={styles.buttonSelectPayment}
           onPress={() =>
             navigation.navigate("SelectPayment", {
-              currentOrderId: currentOrderId,
-              user: user,
-              pesananData: pesananData,
-              selectedMenu: selectedMenu,
+              unpaidOrders: unpaidOrders || [],
+              currentOrderId: currentOrderId || null,
+              user: user || null,
+              pesananData: pesananData || null,
+              selectedMenu: selectedMenu || null,
             })
           }
         >

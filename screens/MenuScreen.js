@@ -118,7 +118,7 @@ export default function MenusScreen({ userData }) {
               ))}
             </View>
           )}
-          <View style={{ flex: 4, marginTop: 10 }}>
+          <View style={{ flex: 3, marginTop: 10 }}>
             <Image
               source={require("../assets/garfieldTomoro.jpg")}
               style={{

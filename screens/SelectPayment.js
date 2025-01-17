@@ -17,6 +17,7 @@ export default function PaymentSelectScreen({ route }) {
   const { pesananData } = route.params;
   const { user } = route.params;
   const { currentOrderId } = route.params;
+  const { unpaidOrders } = route.params;
 
   const paymentMethods = [
     {
@@ -47,32 +48,68 @@ export default function PaymentSelectScreen({ route }) {
   };
 
   const handlePayment = () => {
-    // Mengecek jika metode pembayaran dipilih
     if (!selectedMethod) {
       Alert.alert("Payment Failed", "Please select a payment method");
-      return; // Menghentikan eksekusi lebih lanjut jika tidak ada metode pembayaran yang dipilih
+      return;
     }
 
-    // Kirim data ke backend
-    axios
-      .post(`http://192.168.203.178:5000/pesanans/${currentOrderId}`, {
-        status_pesanan: "Sudah Bayar", // Kirim status "Sudah Bayar" langsung
-        id: currentOrderId,
-      })
-      .then(() => {
-        // Tunggu state berubah, baru navigasi
-        navigation.navigate("PaymentSuccessScreen", {
-          paymentMethod: paymentMethods.find(
-            (method) => method.id === selectedMethod
-          ),
-          pesananData: pesananData,
-          user: user,
-        });
-      })
-      .catch((error) => {
-        console.error("Error updating payment status: ", error);
-        Alert.alert("Error", "Error processing payment");
+    // Validasi unpaidOrders dan currentOrderId
+    const isUnpaidOrdersValid =
+      Array.isArray(unpaidOrders) && unpaidOrders.length > 0;
+    const isCurrentOrderIdValid =
+      currentOrderId !== null && currentOrderId !== undefined;
+
+    if (isUnpaidOrdersValid) {
+      // Lakukan request untuk update status semua unpaidOrders
+      unpaidOrders.forEach((order) => {
+        axios
+          .post(`http://192.168.203.178:5000/pesanans/${order.id}`, {
+            status_pesanan: "Sudah Bayar",
+            id: order.id,
+          })
+          .then(() => {
+            console.log(`Order ${order.id} status updated to "Sudah Bayar"`);
+          })
+          .catch((error) => {
+            console.error(`Error updating order ${order.id}: `, error);
+            Alert.alert("Error", "Error processing payment for some orders");
+          });
       });
+
+      // Navigasi ke PaymentSuccessScreen setelah semua status diubah
+      navigation.navigate("PaymentSuccessScreen", {
+        paymentMethod: paymentMethods.find(
+          (method) => method.id === selectedMethod
+        ),
+        pesananData: pesananData,
+        user: user,
+        unpaidOrders: unpaidOrders, // Kirim unpaidOrders jika diperlukan
+      });
+    } else if (isCurrentOrderIdValid) {
+      // Jika hanya ada currentOrderId yang valid, update status pesanan tersebut
+      axios
+        .post(`http://192.168.203.178:5000/pesanans/${currentOrderId}`, {
+          status_pesanan: "Sudah Bayar",
+          id: currentOrderId,
+        })
+        .then(() => {
+          // Navigasi ke PaymentSuccessScreen setelah status berhasil diubah
+          navigation.navigate("PaymentSuccessScreen", {
+            paymentMethod: paymentMethods.find(
+              (method) => method.id === selectedMethod
+            ),
+            pesananData: pesananData,
+            user: user,
+            unpaidOrders: unpaidOrders, // Kirim unpaidOrders jika diperlukan
+          });
+        })
+        .catch((error) => {
+          console.error("Error updating payment status: ", error);
+          Alert.alert("Error", "Error processing payment");
+        });
+    } else {
+      Alert.alert("Error", "No unpaid orders found or invalid order ID");
+    }
   };
 
   return (
@@ -84,7 +121,9 @@ export default function PaymentSelectScreen({ route }) {
         <View style={styles.orderCard}>
           <Text style={styles.price}>
             {pesananData.length > 0
-              ? `Rp ${pesananData[0].total_harga.toLocaleString("id-ID")}`
+              ? `Rp ${pesananData[0]?.total_harga?.toLocaleString("id-ID")}`
+              : Array.isArray(unpaidOrders) && unpaidOrders.length > 0
+              ? `Rp ${unpaidOrders[0]?.total_harga?.toLocaleString("id-ID")}`
               : "Rp 0"}
           </Text>
         </View>
