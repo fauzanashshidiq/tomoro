@@ -42,7 +42,7 @@ export default function CheckoutScreen({ route }) {
   useEffect(() => {
     if (currentOrderId) {
       axios
-        .get(`http://192.168.0.102:5000/pesanans/${currentOrderId}`)
+        .get(`http://192.168.203.178:5000/pesanans/${currentOrderId}`)
         .then((response) => {
           setPesananData([response.data]); // Simpan data pesanan
         })

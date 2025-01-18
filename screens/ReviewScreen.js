@@ -5,6 +5,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
+  Alert,
   StyleSheet,
 } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
@@ -44,30 +45,52 @@ export default function ReviewScreen({ navigation, route }) {
       timestamp: formattedTimestamp,
     };
 
-    try {
-      const response = await axios.post(
-        "http://192.168.0.102:5000/reviews",
-        reviewData
-      );
+    // Menampilkan alert untuk konfirmasi
+    Alert.alert(
+      "Confirm Review",
+      "Are you sure you want to submit this review?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Send",
+          onPress: async () => {
+            try {
+              const response = await axios.post(
+                "http://192.168.203.178:5000/reviews",
+                reviewData
+              );
 
-      if (response.status === 201 || response.status === 200) {
-        alert("Thank you for your review!");
-        setReviews([reviewData, ...reviews]);
-        setRating(0);
-        setComment("");
-        navigation.navigate("HasilReviewScreen", { MenuId: MenuId });
-        // navigation.navigate("HasilReviewScreen", {
-        //   menuId: menuId,
-        //   reviews: [reviewData, ...reviews],
-        // });
-      } else {
-        console.error("Failed to submit review:", response.statusText);
-        alert("Failed to submit review. Please try again later.");
-      }
-    } catch (error) {
-      console.error("An error occurred while submitting the review:", error);
-      alert("An error occurred. Please try again later.");
-    }
+              if (response.status === 201 || response.status === 200) {
+                Alert.alert(
+                  "Review Successfully!",
+                  "Thank you for your review!"
+                );
+                setReviews([reviewData, ...reviews]);
+                setRating(0);
+                setComment("");
+                navigation.navigate("HasilReviewScreen", { MenuId: MenuId });
+              } else {
+                console.error("Failed to submit review:", response.statusText);
+                Alert.alert(
+                  "Review Failed!",
+                  "Failed to submit review. Please try again later."
+                );
+              }
+            } catch (error) {
+              console.error(
+                "An error occurred while submitting the review:",
+                error
+              );
+              alert("An error occurred. Please try again later.");
+            }
+          },
+        },
+      ],
+      { cancelable: false }
+    );
   };
 
   const renderStar = (index) => {

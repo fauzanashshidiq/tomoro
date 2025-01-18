@@ -1,8 +1,16 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Image,
+  ScrollView,
+} from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { LinearGradient } from "expo-linear-gradient";
+import { format } from "date-fns";
 
 export default function HasilReviewScreen({ route, navigation }) {
   const { MenuId } = route.params; // Mengambil MenuId dari parameter navigasi
@@ -26,11 +34,15 @@ export default function HasilReviewScreen({ route, navigation }) {
     const fetchData = async () => {
       try {
         // Fetch data produk
-        const productResponse = await axios.get(`http://192.168.0.102:5000/menu/${MenuId}`);
+        const productResponse = await axios.get(
+          `http://192.168.203.178:5000/menu/${MenuId}`
+        );
         setProduct(productResponse.data);
 
         // Fetch reviews
-        const reviewsResponse = await axios.get(`http://192.168.0.102:5000/reviews/${MenuId}`);
+        const reviewsResponse = await axios.get(
+          `http://192.168.203.178:5000/reviews/${MenuId}`
+        );
         setReviews(reviewsResponse.data);
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -70,27 +82,33 @@ export default function HasilReviewScreen({ route, navigation }) {
 
       {/* Menampilkan gambar dan nama produk di atas */}
       {product && (
-        <View style={styles.container}>
-        <View style={styles.reviewBox}>
-          <Text style={styles.label}>Rate Your Order</Text>
-          <View style={styles.productContainer}>
-            <Image
-              source={imageMapping[product.image] || null}
-              style={styles.productImage}
+        <View style={styles.containerAtas}>
+          <View style={styles.reviewBox}>
+            <Text style={styles.label}>Rate Orders</Text>
+            <View style={styles.productContainer}>
+              <Image
+                source={imageMapping[product.image] || null}
+                style={styles.productImage}
               />
-            <Text style={styles.label}>{product.nama}</Text>
+              <Text style={styles.label}>{product.nama}</Text>
+            </View>
           </View>
-        </View>
         </View>
       )}
 
-      <ScrollView style={styles.container}>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={{ paddingBottom: 107 }}
+      >
         {/* Menampilkan review-review produk */}
         {reviews.map((review, index) => (
           <View key={index} style={styles.reviewBoxReview}>
             <View style={styles.containerLabelUser}>
               <Text style={styles.labelName}>{review.username}</Text>
-              <Text style={styles.labelName}>{review.review_timestamp}</Text>
+              <Text style={styles.labelName}>
+                {" "}
+                {format(new Date(review.review_timestamp), "dd/MM/yyyy HH:mm")}
+              </Text>
             </View>
             <View style={styles.ratingContainer}>
               {[1, 2, 3, 4, 5].map((star) => (
@@ -112,7 +130,6 @@ export default function HasilReviewScreen({ route, navigation }) {
           </View>
         ))}
       </ScrollView>
-
       <TouchableOpacity
         style={styles.doneButton}
         onPress={() => navigation.navigate("OrderScreen")}
@@ -163,11 +180,15 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   doneButton: {
+    position: "absolute",
+    bottom: 20,
+    left: 40,
+    right: 40,
     backgroundColor: "#EE7B00",
-    padding: 15,
     borderRadius: 10,
+    height: 50,
+    justifyContent: "center",
     alignItems: "center",
-    margin: 20,
   },
   doneButtonText: {
     color: "#ffffff",
@@ -178,12 +199,16 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
   },
+  containerAtas: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
+  },
   reviewBox: {
     backgroundColor: "#ffffff",
     borderRadius: 10,
     padding: 10,
     elevation: 5,
-    marginBottom: 10,
+    marginBottom: 5,
   },
   reviewBoxReview: {
     backgroundColor: "#ffffff",

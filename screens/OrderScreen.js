@@ -42,7 +42,7 @@ export default function OrderScreen({ userData }) {
   useEffect(() => {
     const interval = setInterval(() => {
       axios
-        .get(`http://192.168.0.102:5000/pesanans2`, {
+        .get(`http://192.168.203.178:5000/pesanans2`, {
           params: {
             user_id: userId,
             status_pesanan: "Sudah Bayar",
@@ -66,7 +66,7 @@ export default function OrderScreen({ userData }) {
         });
 
       axios
-        .get(`http://192.168.0.102:5000/pesanans2`, {
+        .get(`http://192.168.203.178:5000/pesanans2`, {
           params: {
             user_id: userId,
             status_pesanan: "Belum Bayar",
@@ -90,7 +90,7 @@ export default function OrderScreen({ userData }) {
         });
 
       axios
-        .get("http://192.168.0.102:5000/menus")
+        .get("http://192.168.203.178:5000/menus")
         .then((response) => {
           setMenuData(response.data); // Simpan data ke state
           setLoading(false); // Set loading selesai
@@ -99,15 +99,15 @@ export default function OrderScreen({ userData }) {
           console.error("Error fetching data:", error);
           setLoading(false); // Set loading selesai meski ada error
         });
-        axios
-          .get(`http://192.168.0.102:5000/review/${userId}`)
-          .then((response) => {
-            setReviews(response.data);
-          })
-          .catch((error) => {
-            console.error("There was an error fetching the reviews:", error);
-          });
-    }, 5000);
+      axios
+        .get(`http://192.168.203.178:5000/review/${userId}`)
+        .then((response) => {
+          setReviews(response.data);
+        })
+        .catch((error) => {
+          console.error("There was an error fetching the reviews:", error);
+        });
+    }, 100);
 
     return () => clearInterval(interval);
   }, [userId]);
@@ -279,12 +279,28 @@ export default function OrderScreen({ userData }) {
                         style={styles.productQuantity}
                       >{`${order.quantity} Item`}</Text>
                       <TouchableOpacity
-                        onPress={() =>
-                          navigation.navigate("ReviewScreen", {
-                            orderId: order.id,
-                            MenuId: order.menu_id,
-                          })
-                        }
+                        onPress={() => {
+                          // Cek apakah review sudah ada untuk order_id spesifik ini
+                          const existingReview = reviews.find(
+                            (review) =>
+                              String(review.order_id) === String(order.id) &&
+                              String(review.menu_id) === String(order.menu_id)
+                          );
+
+                          if (existingReview) {
+                            // Tampilkan alert jika pesanan ini sudah direview
+                            Alert.alert(
+                              "Have reviewed",
+                              "You have already provided a review for this order. Select Reviews to edit/delete your review."
+                            );
+                          } else {
+                            // Navigasi ke ReviewScreen jika belum pernah review
+                            navigation.navigate("ReviewScreen", {
+                              orderId: order.id,
+                              MenuId: order.menu_id,
+                            });
+                          }
+                        }}
                         style={styles.rateButtonContainer}
                       >
                         <Text style={styles.rateButtonText}>Rate</Text>
@@ -319,9 +335,13 @@ export default function OrderScreen({ userData }) {
                       <Text style={styles.productPrice}>
                         Rp {menu.harga.toLocaleString("id-ID")}
                       </Text>
-                      <TouchableOpacity            
+                      <TouchableOpacity
                         style={styles.rateButtonContainerReviews}
-                        onPress={() => navigation.navigate("HasilReviewScreen", {MenuId: menu.id})}
+                        onPress={() =>
+                          navigation.navigate("HasilReviewScreen", {
+                            MenuId: menu.id,
+                          })
+                        }
                       >
                         <Text style={styles.rateButtonTextReview}>
                           All Reviews
@@ -330,59 +350,68 @@ export default function OrderScreen({ userData }) {
                     </View>
                   </View>
                   <View style={styles.reviewBox}>
-            {reviews
-              .filter(review => review.menu_id === menu.id)  // Filter review berdasarkan menu_id
-              .map((review, index) => (
-                <View key={index}>
-                  <View
-                    style={{
-                      borderTopWidth: 1,
-                      marginVertical: 10,
-                      borderColor: "#EFEFEF",
-                    }}
-                  ></View>
-                  <Text style={styles.headerReviewText}>Your Review</Text>
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      justifyContent: "space-between",
-                    }}
-                  >
-                    <View style={styles.ratingContainer}>
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <Text
-                          key={star}
-                          style={{
-                            fontSize: 30,
-                            color: review.review_rating >= star ? "#FFD700" : "#CCCCCC",
-                            marginHorizontal: 1,
-                          }}
-                        >
-                          ★
-                        </Text>
+                    {reviews
+                      .filter((review) => review.menu_id === menu.id) // Filter review berdasarkan menu_id
+                      .map((review, index) => (
+                        <View key={index}>
+                          <View
+                            style={{
+                              borderTopWidth: 1,
+                              marginVertical: 10,
+                              borderColor: "#EFEFEF",
+                            }}
+                          ></View>
+                          <Text style={styles.headerReviewText}>
+                            Your Review
+                          </Text>
+                          <View
+                            style={{
+                              flexDirection: "row",
+                              justifyContent: "space-between",
+                            }}
+                          >
+                            <View style={styles.ratingContainer}>
+                              {[1, 2, 3, 4, 5].map((star) => (
+                                <Text
+                                  key={star}
+                                  style={{
+                                    fontSize: 30,
+                                    color:
+                                      review.review_rating >= star
+                                        ? "#FFD700"
+                                        : "#CCCCCC",
+                                    marginHorizontal: 1,
+                                  }}
+                                >
+                                  ★
+                                </Text>
+                              ))}
+                            </View>
+                            <TouchableOpacity
+                              style={styles.editButton}
+                              onPress={() =>
+                                Alert.alert(
+                                  "Your Review",
+                                  "What do you want?",
+                                  [
+                                    { text: "Cancel" },
+                                    { text: "Delete" },
+                                    { text: "Edit" },
+                                  ]
+                                )
+                              }
+                            >
+                              <Text style={styles.editIcon}>✎</Text>
+                            </TouchableOpacity>
+                          </View>
+                          <View style={styles.komenContainer}>
+                            <Text style={styles.labelKomen}>
+                              {review.review_comment || "No review yet."}
+                            </Text>
+                          </View>
+                        </View>
                       ))}
-                    </View>
-                    <TouchableOpacity
-                      style={styles.editButton}
-                      onPress={() =>
-                        Alert.alert("Your Review", "What do you want?", [
-                          { text: "Cancel" },
-                          { text: "Delete" },
-                          { text: "Edit" },
-                        ])
-                      }
-                    >
-                      <Text style={styles.editIcon}>✎</Text>
-                    </TouchableOpacity>
                   </View>
-                  <View style={styles.komenContainer}>
-                    <Text style={styles.labelKomen}>
-                      {review.review_comment || "No review yet."}
-                    </Text>
-                  </View>
-                </View>
-              ))}
-          </View>
                 </View>
               ))
             )}

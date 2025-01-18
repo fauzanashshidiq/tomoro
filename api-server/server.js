@@ -15,7 +15,7 @@ app.use(bodyParser.json());
 const db = mysql.createConnection({
   host: "localhost", // Ganti dengan host Anda
   user: "root", // Ganti dengan username Anda
-  password: "_28Mei2004", // Ganti dengan password Anda
+  password: "admin123", // Ganti dengan password Anda
   database: "tomoro", // Ganti dengan nama database Anda
 });
 
@@ -251,11 +251,6 @@ app.post("/reviews", async (req, res) => {
     return res.status(400).json({ message: "Missing required fields" });
   }
 
-  // Ensure timestamp is defined
-  const formattedTimestamp = timestamp
-    ? timestamp.replace("T", " ").substring(0, 19)
-    : null;
-
   // Proceed with query to check if id_pesanan exists
   const checkQuery = `SELECT id FROM pesanans WHERE id = ?`;
 
@@ -272,32 +267,26 @@ app.post("/reviews", async (req, res) => {
     // Insert the review if everything is valid
     const query = `
       INSERT INTO reviews (id_pesanan, rating, komen, timestamp)
-      VALUES (?, ?, ?, ?)
+      VALUES (?, ?, ?, NOW())
     `;
 
-    db.query(
-      query,
-      [id_pesanan, rating, komen, formattedTimestamp],
-      (err, result) => {
-        if (err) {
-          console.error("Error inserting review:", err);
-          return res
-            .status(500)
-            .json({ message: "Error inserting review", error: err });
-        }
-
-        console.log("Review inserted successfully");
-        res.status(201).json({ message: "Review submitted successfully" });
+    db.query(query, [id_pesanan, rating, komen], (err, result) => {
+      if (err) {
+        console.error("Error inserting review:", err);
+        return res
+          .status(500)
+          .json({ message: "Error inserting review", error: err });
       }
-    );
+
+      console.log("Review inserted successfully");
+      res.status(201).json({ message: "Review submitted successfully" });
+    });
   });
 });
 
 // Endpoint untuk mendapatkan reviews berdasarkan menu_id
 app.get("/reviews/:menuId", async (req, res) => {
   const { menuId } = req.params;
-  console.log("review hit")
-  console.log("Received menuId:", menuId);
 
   const query = `
     SELECT 
@@ -329,11 +318,10 @@ app.get("/reviews/:menuId", async (req, res) => {
         console.error("Error fetching reviews:", err);
         return res.status(500).json({ message: "Internal server error" });
       }
-      console.log(result.length)
 
       // Jika tidak ada hasil
       if (result.length === 0) {
-        return res.status(200).json([]);  // Tidak ada review, tapi respons tetap berhasil
+        return res.status(200).json([]); // Tidak ada review, tapi respons tetap berhasil
       }
 
       // Kirimkan hasil ke client
@@ -346,7 +334,7 @@ app.get("/reviews/:menuId", async (req, res) => {
 });
 
 app.get("/menu/:menuId", async (req, res) => {
-  const { menuId } = req.params;  // Ambil menuId dari parameter URL
+  const { menuId } = req.params; // Ambil menuId dari parameter URL
 
   try {
     // Query untuk mengambil data menu berdasarkan menuId
@@ -373,13 +361,12 @@ app.get("/menu/:menuId", async (req, res) => {
 
 app.get("/review/:userId", async (req, res) => {
   const { userId } = req.params;
-  console.log("review hit");
-  console.log("Received userId:", userId);
 
   const query = `
     SELECT 
         r.id,
         m.id AS menu_id,
+        p.id AS order_id,
         r.rating AS review_rating,
         r.komen AS review_comment
     FROM 
@@ -402,12 +389,10 @@ app.get("/review/:userId", async (req, res) => {
         console.error("Error fetching reviews:", err);
         return res.status(500).json({ message: "Internal server error" });
       }
-      
-      console.log(result);
 
       // Jika tidak ada hasil, cukup kirimkan respons kosong
       if (result.length === 0) {
-        return res.status(200).json([]);  // Tidak ada review, tapi respons tetap berhasil
+        return res.status(200).json([]); // Tidak ada review, tapi respons tetap berhasil
       }
 
       // Kirimkan hasil ke client
@@ -419,9 +404,7 @@ app.get("/review/:userId", async (req, res) => {
   }
 });
 
-
-
 // Jalankan server
 app.listen(port, () => {
-  console.log(`Server running at http://192.168.0.102:${port}`);
+  console.log(`Server running at http://192.168.203.178:${port}`);
 });

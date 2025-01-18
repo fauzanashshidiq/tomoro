@@ -23,7 +23,7 @@ export default function PhoneNumberScreen({ route, navigation }) {
 
     // Kirim data ke backend
     axios
-      .post("http://192.168.0.102:5000/register", {
+      .post("http://192.168.203.178:5000/register", {
         name,
         email,
         phone: `${countryCode}${phone}`,
