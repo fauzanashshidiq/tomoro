@@ -35,13 +35,13 @@ export default function HasilReviewScreen({ route, navigation }) {
       try {
         // Fetch data produk
         const productResponse = await axios.get(
-          `http://192.168.203.178:5000/menu/${MenuId}`
+          `http://192.168.223.191:5000/menu/${MenuId}`
         );
         setProduct(productResponse.data);
 
         // Fetch reviews
         const reviewsResponse = await axios.get(
-          `http://192.168.203.178:5000/reviews/${MenuId}`
+          `http://192.168.223.191:5000/reviews/${MenuId}`
         );
         setReviews(reviewsResponse.data);
       } catch (error) {

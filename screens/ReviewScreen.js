@@ -26,72 +26,94 @@ export default function ReviewScreen({ navigation, route }) {
       alert("Please provide a valid rating between 1 and 5.");
       return;
     }
-
+  
     if (!comment.trim()) {
       alert("Please provide a comment.");
       return;
     }
-
+  
     // Ensure timestamp is formatted properly
     const formattedTimestamp = new Date()
       .toISOString()
       .replace("T", " ")
       .substring(0, 19);
-
+  
     const reviewData = {
-      id_pesanan: orderId, // Replace with the actual order ID
+      id_pesanan: orderId,
       rating,
-      komen: comment, // Use 'komen' instead of 'comment' to match the database column name
+      komen: comment,
       timestamp: formattedTimestamp,
     };
-
-    // Menampilkan alert untuk konfirmasi
-    Alert.alert(
-      "Confirm Review",
-      "Are you sure you want to submit this review?",
-      [
-        {
-          text: "Cancel",
-          style: "cancel",
-        },
-        {
-          text: "Send",
-          onPress: async () => {
-            try {
-              const response = await axios.post(
-                "http://192.168.203.178:5000/reviews",
-                reviewData
-              );
-
-              if (response.status === 201 || response.status === 200) {
-                Alert.alert(
-                  "Review Successfully!",
-                  "Thank you for your review!"
-                );
-                setReviews([reviewData, ...reviews]);
-                setRating(0);
-                setComment("");
-                navigation.navigate("HasilReviewScreen", { MenuId: MenuId });
+  
+    // Check if an ID exists (indicating an update scenario)
+    const isUpdate = route.params?.id;
+  
+    const alertMessage = isUpdate
+      ? "Are you sure you want to update this review?"
+      : "Are you sure you want to submit this review?";
+  
+    Alert.alert("Confirm Review", alertMessage, [
+      {
+        text: "Cancel",
+        style: "cancel",
+      },
+      {
+        text: isUpdate ? "Update" : "Send",
+        onPress: async () => {
+          try {
+            const url = isUpdate
+              ? `http://192.168.223.191:5000/reviews/update/${route.params.id}`
+              : "http://192.168.223.191:5000/reviews";
+  
+            const method = isUpdate ? "PUT" : "POST";
+  
+            const response = await axios({
+              url,
+              method,
+              data: reviewData,
+            });
+  
+            if (response.status === 201 || response.status === 200) {
+              const successMessage = isUpdate
+                ? "Review updated successfully!"
+                : "Review submitted successfully!";
+              
+              Alert.alert("Success", successMessage);
+            
+              // Reset input fields
+              setReviews([reviewData, ...reviews]);
+              setRating(0);
+              setComment("");
+            
+              // Navigate based on the action
+              if (isUpdate) {
+                navigation.navigate("OrderScreen");
               } else {
-                console.error("Failed to submit review:", response.statusText);
-                Alert.alert(
-                  "Review Failed!",
-                  "Failed to submit review. Please try again later."
-                );
+                navigation.navigate("HasilReviewScreen", { MenuId: MenuId });
               }
-            } catch (error) {
-              console.error(
-                "An error occurred while submitting the review:",
-                error
-              );
-              alert("An error occurred. Please try again later.");
             }
-          },
+             else {
+              console.error(
+                "Failed to process review:",
+                response.statusText
+              );
+              Alert.alert(
+                "Error",
+                "Failed to process review. Please try again later."
+              );
+            }
+          } catch (error) {
+            console.error(
+              "An error occurred while processing the review:",
+              error
+            );
+            alert("An error occurred. Please try again later.");
+          }
         },
-      ],
-      { cancelable: false }
-    );
+      },
+    ]);
   };
+  
 
   const renderStar = (index) => {
     return (

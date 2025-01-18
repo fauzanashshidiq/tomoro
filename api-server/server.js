@@ -15,7 +15,7 @@ app.use(bodyParser.json());
 const db = mysql.createConnection({
   host: "localhost", // Ganti dengan host Anda
   user: "root", // Ganti dengan username Anda
-  password: "admin123", // Ganti dengan password Anda
+  password: "_28Mei2004", // Ganti dengan password Anda
   database: "tomoro", // Ganti dengan nama database Anda
 });
 
@@ -404,7 +404,54 @@ app.get("/review/:userId", async (req, res) => {
   }
 });
 
+// DELETE review by ID
+app.delete("/reviews/delete/:id", (req, res) => {
+  const { id } = req.params;
+
+  const query = "DELETE FROM reviews WHERE id = ?";
+  db.query(query, [id], (err, result) => {
+    if (err) {
+      console.error("Error executing query:", err);
+      return res.status(500).json({ message: "Database error" });
+    }
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "Review not found" });
+    }
+    res.status(200).json({ message: "Review deleted successfully" });
+  });
+});
+
+// PUT (edit) review by ID
+app.put("/reviews/update/:id", (req, res) => {
+  const { id } = req.params; // Mengambil id dari parameter URL
+  const { rating, komen } = req.body; // Mengambil data dari body request
+
+  const query = `
+    UPDATE reviews
+    SET rating = ?, komen = ?, timestamp = NOW()
+    WHERE id = ?
+  `;
+
+  db.query(query, [rating, komen, id], (err, result) => {
+    if (err) {
+      console.error("Error updating review:", err);
+      return res
+        .status(500)
+        .json({ message: "Error updating review", error: err });
+    }
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "Review not found" });
+    }
+
+    console.log("Review updated successfully");
+    res.status(200).json({ message: "Review updated successfully" });
+  });
+});
+
+
+
 // Jalankan server
 app.listen(port, () => {
-  console.log(`Server running at http://192.168.203.178:${port}`);
+  console.log(`Server running at http://192.168.223.191:${port}`);
 });

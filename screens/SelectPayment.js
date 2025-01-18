@@ -63,7 +63,7 @@ export default function PaymentSelectScreen({ route }) {
       // Lakukan request untuk update status semua unpaidOrders
       unpaidOrders.forEach((order) => {
         axios
-          .post(`http://192.168.203.178:5000/pesanans/${order.id}`, {
+          .post(`http://192.168.223.191:5000/pesanans/${order.id}`, {
             status_pesanan: "Sudah Bayar",
             id: order.id,
           })

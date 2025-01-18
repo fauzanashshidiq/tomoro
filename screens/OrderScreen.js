@@ -42,7 +42,7 @@ export default function OrderScreen({ userData }) {
   useEffect(() => {
     const interval = setInterval(() => {
       axios
-        .get(`http://192.168.203.178:5000/pesanans2`, {
+        .get(`http://192.168.223.191:5000/pesanans2`, {
           params: {
             user_id: userId,
             status_pesanan: "Sudah Bayar",
@@ -66,7 +66,7 @@ export default function OrderScreen({ userData }) {
         });
 
       axios
-        .get(`http://192.168.203.178:5000/pesanans2`, {
+        .get(`http://192.168.223.191:5000/pesanans2`, {
           params: {
             user_id: userId,
             status_pesanan: "Belum Bayar",
@@ -90,7 +90,7 @@ export default function OrderScreen({ userData }) {
         });
 
       axios
-        .get("http://192.168.203.178:5000/menus")
+        .get("http://192.168.223.191:5000/menus")
         .then((response) => {
           setMenuData(response.data); // Simpan data ke state
           setLoading(false); // Set loading selesai
@@ -100,7 +100,7 @@ export default function OrderScreen({ userData }) {
           setLoading(false); // Set loading selesai meski ada error
         });
       axios
-        .get(`http://192.168.203.178:5000/review/${userId}`)
+        .get(`http://192.168.223.191:5000/review/${userId}`)
         .then((response) => {
           setReviews(response.data);
         })
@@ -395,14 +395,33 @@ export default function OrderScreen({ userData }) {
                                   "What do you want?",
                                   [
                                     { text: "Cancel" },
-                                    { text: "Delete" },
-                                    { text: "Edit" },
+                                    {
+                                      text: "Delete",
+                                      onPress: () => {
+                                        const id = review.id;
+                                        fetch(`http://192.168.223.191:5000/reviews/delete/${id}`, {
+                                          method: "DELETE",
+                                        })
+                                          .then((response) => response.json())
+                                          .then((data) => console.log(data))
+                                          .catch((error) => console.error(error));
+                                      },
+                                    },
+                                    {
+                                      text: "Edit",
+                                      onPress: () => {
+                                        navigation.navigate("ReviewScreen", { id: review.id,
+                                          orderId: review.orderId,
+                                          MenuId: review.MenuId, });
+                                      },
+                                    },
                                   ]
                                 )
                               }
                             >
                               <Text style={styles.editIcon}>✎</Text>
                             </TouchableOpacity>
+
                           </View>
                           <View style={styles.komenContainer}>
                             <Text style={styles.labelKomen}>

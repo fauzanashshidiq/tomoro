@@ -25,7 +25,7 @@ export default function MenusScreen({ userData }) {
   useEffect(() => {
     // Ambil data dari API
     axios
-      .get("http://192.168.203.178:5000/menus")
+      .get("http://192.168.223.191:5000/menus")
       .then((response) => {
         setMenuData(response.data); // Simpan data ke state
         setLoading(false); // Set loading selesai

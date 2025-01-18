@@ -62,7 +62,7 @@ export default function MenuModal({ isVisible, onClose, menuData, userData }) {
 
       // Kirim POST request ke endpoint backend
       const response = await axios.post(
-        "http://192.168.203.178:5000/pesanans",
+        "http://192.168.223.191:5000/pesanans",
         orderData
       );
 
